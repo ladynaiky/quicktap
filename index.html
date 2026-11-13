@@ -1,0 +1,3506 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="grafito" data-mode="light" data-contrast="normal">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="TPV para bazares: cobro por departamento y calculadora estilo Casio. Funciona sin conexión.">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="QuickTap">
+    <meta name="application-name" content="QuickTap">
+    <meta name="theme-color" content="#EFEDF0">
+    <title>QuickTap POS — TPV Tablet Sin Catálogo</title>
+
+    <!-- App instalable (PWA) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <!-- Apariencia guardada: se aplica antes de pintar para evitar parpadeos -->
+    <script>
+        (function () {
+            try {
+                var a = JSON.parse(localStorage.getItem('qtpos_appearance') || '{}');
+                var theme = ['grafito', 'azul', 'pino', 'lcd'].indexOf(a.theme) > -1 ? a.theme : 'grafito';
+                var mode = a.mode === 'dark' || a.mode === 'light' ? a.mode
+                    : (a.mode === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.dataset.mode = mode;
+                document.documentElement.dataset.contrast = a.highContrast ? 'high' : 'normal';
+                document.documentElement.dataset.lang2 = localStorage.getItem('qtpos_lang2') === 'zh' ? 'zh' : 'none';
+            } catch (e) { /* almacenamiento no disponible: se usa Grafito claro */ }
+        })();
+    </script>
+
+    <!-- Tipografía M3 (Roboto Flex con cifras tabulares) e iconos Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..700&display=swap" rel="stylesheet">
+    <!-- Solo los iconos que usa la app (lista en orden alfabético): carga mucho más ligera -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0&icon_names=add,backspace,bakery_dining,balance,bar_chart,bluetooth,bluetooth_connected,bluetooth_searching,bolt,brightness_auto,build,call_split,check,check_circle,chevron_right,cleaning_services,close,credit_card,dark_mode,delete,delete_sweep,design_services,download,download_done,electrical_services,error,expand_less,expand_more,folder,grid_view,home,inbox,info,install_mobile,ios_share,language,light_mode,local_drink,palette,pause,pause_circle,payments,percent,point_of_sale,print,receipt,receipt_long,redeem,remove,restart_alt,restore,search,sell,translate,tune,undo,volume_off,volume_up,warning,wifi&display=block" rel="stylesheet">
+
+    <style>
+        /* =========================================================
+           TOKENS DE COLOR MATERIAL 3 (4 temas × claro/oscuro)
+           Generados con HCT. Ver documento "Rediseño de interfaz".
+           ========================================================= */
+        html[data-theme="grafito"][data-mode="light"]{--md-primary:#545F6D;--md-on-primary:#FFFFFF;--md-primary-container:#D8E4F4;--md-on-primary-container:#111C28;--md-secondary:#5B5F63;--md-on-secondary:#FFFFFF;--md-secondary-container:#E0E2E8;--md-on-secondary-container:#181C20;--md-tertiary:#59614C;--md-on-tertiary:#FFFFFF;--md-tertiary-container:#DEE6CA;--md-on-tertiary-container:#171E0D;--md-error:#BA1A1A;--md-on-error:#FFFFFF;--md-error-container:#FFDAD6;--md-on-error-container:#410002;--md-surface:#FAF9FB;--md-on-surface:#1A1C1D;--md-on-surface-variant:#44474B;--md-surface-container-lowest:#FFFFFF;--md-surface-container-low:#F4F3F5;--md-surface-container:#EFEDF0;--md-surface-container-high:#E9E8EA;--md-surface-container-highest:#E3E2E4;--md-surface-dim:#DBD9DC;--md-outline:#75777B;--md-outline-variant:#C5C6CB;--md-inverse-surface:#2F3032;--md-inverse-on-surface:#F2F0F2;--md-inverse-primary:#BCC8D7}
+html[data-theme="grafito"][data-mode="dark"]{--md-primary:#BCC8D7;--md-on-primary:#26313E;--md-primary-container:#3C4855;--md-on-primary-container:#D8E4F4;--md-secondary:#C4C6CC;--md-on-secondary:#2D3135;--md-secondary-container:#44474C;--md-on-secondary-container:#E0E2E8;--md-tertiary:#C2CAAF;--md-on-tertiary:#2C3320;--md-tertiary-container:#424935;--md-on-tertiary-container:#DEE6CA;--md-error:#FFB4AB;--md-on-error:#690004;--md-error-container:#93000A;--md-on-error-container:#FFDAD6;--md-surface:#121315;--md-on-surface:#E3E2E4;--md-on-surface-variant:#C5C6CB;--md-surface-container-lowest:#0D0E10;--md-surface-container-low:#1A1C1D;--md-surface-container:#1E2021;--md-surface-container-high:#292A2C;--md-surface-container-highest:#343537;--md-surface-dim:#121315;--md-outline:#8F9195;--md-outline-variant:#44474B;--md-inverse-surface:#E3E2E4;--md-inverse-on-surface:#2F3032;--md-inverse-primary:#545F6D}
+html[data-theme="azul"][data-mode="light"]{--md-primary:#395F97;--md-on-primary:#FFFFFF;--md-primary-container:#D6E3FF;--md-on-primary-container:#001B3D;--md-secondary:#585E6B;--md-on-secondary:#FFFFFF;--md-secondary-container:#DDE2F2;--md-on-secondary-container:#161C27;--md-tertiary:#3D6569;--md-on-tertiary:#FFFFFF;--md-tertiary-container:#C0EAEE;--md-on-tertiary-container:#002022;--md-error:#BA1A1A;--md-on-error:#FFFFFF;--md-error-container:#FFDAD6;--md-on-error-container:#410002;--md-surface:#FAF9FD;--md-on-surface:#1A1B1E;--md-on-surface-variant:#43474E;--md-surface-container-lowest:#FFFFFF;--md-surface-container-low:#F4F3F7;--md-surface-container:#EEEDF1;--md-surface-container-high:#E9E7EB;--md-surface-container-highest:#E3E2E6;--md-surface-dim:#DAD9DD;--md-outline:#74777F;--md-outline-variant:#C4C6CF;--md-inverse-surface:#2F3033;--md-inverse-on-surface:#F1F0F4;--md-inverse-primary:#A9C7FF}
+html[data-theme="azul"][data-mode="dark"]{--md-primary:#A9C7FF;--md-on-primary:#003063;--md-primary-container:#1D477E;--md-on-primary-container:#D6E3FF;--md-secondary:#C1C6D6;--md-on-secondary:#2A313C;--md-secondary-container:#414753;--md-on-secondary-container:#DDE2F2;--md-tertiary:#A5CED2;--md-on-tertiary:#09363A;--md-tertiary-container:#254D51;--md-on-tertiary-container:#C0EAEE;--md-error:#FFB4AB;--md-on-error:#690004;--md-error-container:#93000A;--md-on-error-container:#FFDAD6;--md-surface:#121316;--md-on-surface:#E3E2E6;--md-on-surface-variant:#C4C6CF;--md-surface-container-lowest:#0D0E11;--md-surface-container-low:#1A1B1E;--md-surface-container:#1E1F23;--md-surface-container-high:#292A2D;--md-surface-container-highest:#343538;--md-surface-dim:#121316;--md-outline:#8E9099;--md-outline-variant:#43474E;--md-inverse-surface:#E3E2E6;--md-inverse-on-surface:#2F3033;--md-inverse-primary:#395F97}
+html[data-theme="pino"][data-mode="light"]{--md-primary:#356854;--md-on-primary:#FFFFFF;--md-primary-container:#B8EED6;--md-on-primary-container:#002116;--md-secondary:#55615B;--md-on-secondary:#FFFFFF;--md-secondary-container:#D8E6DD;--md-on-secondary-container:#121E19;--md-tertiary:#49626D;--md-on-tertiary:#FFFFFF;--md-tertiary-container:#CCE7F3;--md-on-tertiary-container:#021F28;--md-error:#BA1A1A;--md-on-error:#FFFFFF;--md-error-container:#FFDAD6;--md-on-error-container:#410002;--md-surface:#F8FAF6;--md-on-surface:#191C1A;--md-on-surface-variant:#404944;--md-surface-container-lowest:#FFFFFF;--md-surface-container-low:#F2F4F1;--md-surface-container:#ECEEEB;--md-surface-container-high:#E6E9E5;--md-surface-container-highest:#E1E3E0;--md-surface-dim:#D8DBD7;--md-outline:#707974;--md-outline-variant:#BFC9C2;--md-inverse-surface:#2E312F;--md-inverse-on-surface:#EFF1EE;--md-inverse-primary:#9CD2BA}
+html[data-theme="pino"][data-mode="dark"]{--md-primary:#9CD2BA;--md-on-primary:#003828;--md-primary-container:#1B4F3E;--md-on-primary-container:#B8EED6;--md-secondary:#BCCAC2;--md-on-secondary:#27332D;--md-secondary-container:#3D4943;--md-on-secondary-container:#D8E6DD;--md-tertiary:#B0CBD7;--md-on-tertiary:#1A343D;--md-tertiary-container:#314A54;--md-on-tertiary-container:#CCE7F3;--md-error:#FFB4AB;--md-on-error:#690004;--md-error-container:#93000A;--md-on-error-container:#FFDAD6;--md-surface:#111412;--md-on-surface:#E1E3E0;--md-on-surface-variant:#BFC9C2;--md-surface-container-lowest:#0B0F0D;--md-surface-container-low:#191C1A;--md-surface-container:#1D201E;--md-surface-container-high:#272B29;--md-surface-container-highest:#323633;--md-surface-dim:#111412;--md-outline:#89938D;--md-outline-variant:#404944;--md-inverse-surface:#E1E3E0;--md-inverse-on-surface:#2E312F;--md-inverse-primary:#356854}
+html[data-theme="lcd"][data-mode="light"]{--md-primary:#556340;--md-on-primary:#FFFFFF;--md-primary-container:#D9E8BC;--md-on-primary-container:#141F04;--md-secondary:#5B6051;--md-on-secondary:#FFFFFF;--md-secondary-container:#E0E5D1;--md-on-secondary-container:#191D11;--md-tertiary:#8F4D29;--md-on-tertiary:#FFFFFF;--md-tertiary-container:#FFDBCB;--md-on-tertiary-container:#351000;--md-error:#BA1A1A;--md-on-error:#FFFFFF;--md-error-container:#FFDAD6;--md-on-error-container:#410002;--md-surface:#FAFAF0;--md-on-surface:#1A1C17;--md-on-surface-variant:#44483C;--md-surface-container-lowest:#FFFFFF;--md-surface-container-low:#F4F4EA;--md-surface-container:#EEEEE5;--md-surface-container-high:#E9E9DF;--md-surface-container-highest:#E3E3DA;--md-surface-dim:#DADBD1;--md-outline:#75796A;--md-outline-variant:#C4C8B8;--md-inverse-surface:#2F312B;--md-inverse-on-surface:#F1F1E8;--md-inverse-primary:#BDCCA1}
+html[data-theme="lcd"][data-mode="dark"]{--md-primary:#BDCCA1;--md-on-primary:#283416;--md-primary-container:#3E4B2A;--md-on-primary-container:#D9E8BC;--md-secondary:#C4C9B6;--md-on-secondary:#2D3225;--md-secondary-container:#44493A;--md-on-secondary-container:#E0E5D1;--md-tertiary:#FFB692;--md-on-tertiary:#552001;--md-tertiary-container:#723614;--md-on-tertiary-container:#FFDBCB;--md-error:#FFB4AB;--md-on-error:#690004;--md-error-container:#93000A;--md-on-error-container:#FFDAD6;--md-surface:#12140F;--md-on-surface:#E3E3DA;--md-on-surface-variant:#C4C8B8;--md-surface-container-lowest:#0D0F0A;--md-surface-container-low:#1A1C17;--md-surface-container:#1E201A;--md-surface-container-high:#292B25;--md-surface-container-highest:#34352F;--md-surface-dim:#12140F;--md-outline:#8E9283;--md-outline-variant:#44483C;--md-inverse-surface:#E3E3DA;--md-inverse-on-surface:#2F312B;--md-inverse-primary:#556340}
+html[data-mode="light"]{--qt-cobrar:#1A6C31;--qt-on-cobrar:#FFFFFF;--qt-cobrar-container:#A3F5AA;--qt-on-cobrar-container:#002108;--qt-aviso:#7D5700;--qt-on-aviso:#FFFFFF;--qt-aviso-container:#FFDEAB;--qt-on-aviso-container:#281900;--qt-lcd:#59614C;--qt-on-lcd:#FFFFFF;--qt-lcd-container:#DEE6CA;--qt-on-lcd-container:#171E0D;--qt-snack-success:#88D990;--qt-snack-error:#FFB4AB;--qt-snack-warning:#FFBA30;--dept-emerald:#4E7351;--dept-sky:#457088;--dept-amber:#876431;--dept-orange:#935E43;--dept-purple:#71648F;--dept-cyan:#397376;--dept-indigo:#5C6A91;--dept-pink:#8D5C74;--dept-slate:#6A6A6A;color-scheme:light}
+html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-container:#00531F;--qt-on-cobrar-container:#A3F5AA;--qt-aviso:#FFBA30;--qt-on-aviso:#422C00;--qt-aviso-container:#5F4100;--qt-on-aviso-container:#FFDEAB;--qt-lcd:#C2CAAF;--qt-on-lcd:#2C3320;--qt-lcd-container:#424935;--qt-on-lcd-container:#DEE6CA;--qt-snack-success:#1A6C31;--qt-snack-error:#BA1A1A;--qt-snack-warning:#7D5700;--dept-emerald:#9BC39B;--dept-sky:#93BEDA;--dept-amber:#DCB277;--dept-orange:#EBAA8A;--dept-purple:#C0B1E1;--dept-cyan:#89C3C5;--dept-indigo:#AAB8E3;--dept-pink:#E2A8C3;--dept-slate:#B9B9B9;color-scheme:dark}
+
+        /* =========================================================
+           BASE
+           ========================================================= */
+        :root {
+            --font: 'Roboto Flex', Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --radius-xs: 4px;
+            --radius-s: 8px;
+            --radius-m: 12px;
+            --radius-l: 16px;
+            --radius-xl: 28px;
+            --gap: 8px;
+            /* Chino simplificado: fuente sin remates de trazo uniforme, muy legible para personas mayores */
+            --zh-font: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Source Han Sans SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        input, textarea, select { user-select: text; -webkit-user-select: text; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            font-family: var(--font);
+            font-size: 14px;
+            line-height: 20px;
+            background: var(--md-surface);
+            color: var(--md-on-surface);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        button { font-family: inherit; }
+        p { margin: 0; }
+        h1, h2, h3, h4 { margin: 0; font-weight: 500; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+
+        /* Cifras tabulares para todos los importes */
+        .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+        /* Material Symbols (ancho fijo para que un fallo de carga no rompa el diseño) */
+        .ms {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            width: 1em;
+            height: 1em;
+            overflow: hidden;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            direction: ltr;
+            flex-shrink: 0;
+            font-feature-settings: 'liga';
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ms-18 { font-size: 18px; }
+        .ms-20 { font-size: 20px; }
+        .ms-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+        /* Escala tipográfica M3 */
+        .display-l { font-size: clamp(40px, 4.4vw, 57px); line-height: 1.12; font-weight: 500; letter-spacing: -0.25px; }
+        .display-m { font-size: clamp(34px, 3.5vw, 45px); line-height: 1.16; font-weight: 600; }
+        .headline-l { font-size: 32px; line-height: 40px; font-weight: 500; }
+        .headline-s { font-size: 24px; line-height: 32px; font-weight: 500; }
+        .title-l { font-size: 22px; line-height: 28px; font-weight: 500; }
+        .title-m { font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: .15px; }
+        .title-s { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: .1px; }
+        .body-l { font-size: 16px; line-height: 24px; font-weight: 400; letter-spacing: .15px; }
+        .body-m { font-size: 14px; line-height: 20px; font-weight: 400; letter-spacing: .25px; }
+        .label-l { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: .1px; }
+        .label-m { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .4px; }
+
+        .muted { color: var(--md-on-surface-variant); }
+        .on-surface { color: var(--md-on-surface); }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .row { display: flex; align-items: center; }
+        .between { justify-content: space-between; }
+        .gap-4 { gap: 4px; } .gap-8 { gap: 8px; } .gap-12 { gap: 12px; } .gap-16 { gap: 16px; }
+        .stack-4 { display: flex; flex-direction: column; gap: 4px; }
+        .stack-8 { display: flex; flex-direction: column; gap: 8px; }
+        .stack-16 { display: flex; flex-direction: column; gap: 16px; }
+        .grow { flex: 1; min-width: 0; }
+        .r { text-align: right; }
+        .divider { height: 1px; background: var(--md-outline-variant); border: 0; margin: 0; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--md-outline-variant); border-radius: 999px; }
+
+        /* =========================================================
+           IDIOMA SECUNDARIO (CHINO) — oculto salvo que se active en Ajustes
+           ========================================================= */
+        .bi { display: inline-flex; flex-direction: column; align-items: center; min-width: 0; }
+        .bi.start { align-items: flex-start; }
+        .bi.inline { flex-direction: row; align-items: baseline; gap: 8px; }
+        .zh {
+            display: none;
+            font-family: var(--zh-font);
+            font-size: var(--zh-size, 20px);
+            line-height: 1.25;
+            font-weight: 500;
+            letter-spacing: 0;
+            text-transform: none;
+            white-space: nowrap;
+        }
+        html[data-lang2="zh"] .zh { display: block; }
+        html[data-lang2="zh"] .zh.inline,
+        html[data-lang2="zh"] .bi.inline > .zh { display: inline; }
+        html:not([data-lang2="zh"]) .zh-only { display: none !important; }
+
+        /* Tamaño del chino por contexto (mínimo 18 px) */
+        .topbar, .panel-head, .section-head, .tax-toggle, .section-label, .lcd-ind, .check-row { --zh-size: 18px; }
+        .key, .segmented, .cash-btn, .multi-row, .btn-tonal, .btn-outlined, .btn-filled, .btn-text { --zh-size: 20px; }
+        .total-row, .snackbar, .tile--preset, .change-box, .amount-box, .dialog-title { --zh-size: 22px; }
+        .lcd-hint { --zh-size: 18px; }
+        .tile--dept { --zh-size: 24px; }
+        .btn-cobrar { --zh-size: 28px; }
+        html[data-lang2="zh"] .topbar { height: 72px; }
+        html[data-lang2="zh"] .topbar .btn { min-height: 56px; }
+        html[data-lang2="zh"] .panel-head { min-height: 64px; }
+        html[data-lang2="zh"] .btn-cobrar { min-height: 84px; }
+        html[data-lang2="zh"] .segmented .seg { min-height: 68px; }
+        html[data-lang2="zh"] .cash-btn { min-height: 72px; }
+        html[data-lang2="zh"] .tile--preset { min-height: 92px; }
+        html[data-lang2="zh"] .snackbar { padding-top: 10px; padding-bottom: 10px; }
+        .snack-text { display: flex; flex-direction: column; }
+        .line-zh { --zh-size: 18px; flex-shrink: 0; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+        .dept-names { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .preset-names { display: flex; flex-direction: column; min-width: 0; }
+        .lcd-hint .zh { text-align: right; }
+
+        /* =========================================================
+           BOTONES M3 (capa de estado: 8 % hover, 12 % pulsado)
+           ========================================================= */
+        .btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 48px;
+            padding: 0 20px;
+            border: 0;
+            border-radius: var(--radius-m);
+            background: transparent;
+            color: inherit;
+            font: 500 14px/20px var(--font);
+            letter-spacing: .1px;
+            cursor: pointer;
+            overflow: hidden;
+            white-space: nowrap;
+            transition: transform .06s ease;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: currentColor;
+            opacity: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            transition: opacity .12s ease;
+        }
+        @media (hover: hover) { .btn:hover::after { opacity: .08; } }
+        .btn:active::after { opacity: .12; }
+        .btn:focus-visible { outline: 3px solid var(--md-primary); outline-offset: 2px; }
+        .btn-filled { background: var(--md-primary); color: var(--md-on-primary); }
+        .btn-tonal { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+        .btn-outlined { box-shadow: inset 0 0 0 1px var(--md-outline); color: var(--md-primary); }
+        .btn-text { color: var(--md-primary); padding: 0 12px; min-width: 48px; }
+        .btn-text.danger, .btn-outlined.danger { color: var(--md-error); }
+        .btn-danger { background: var(--md-error); color: var(--md-on-error); }
+        .btn-cobrar {
+            background: var(--qt-cobrar);
+            color: var(--qt-on-cobrar);
+            min-height: 72px;
+            border-radius: var(--radius-m);
+        }
+        .btn[aria-disabled="true"] {
+            background: color-mix(in srgb, var(--md-on-surface) 12%, transparent);
+            color: color-mix(in srgb, var(--md-on-surface) 45%, transparent);
+            box-shadow: none;
+        }
+        .btn .badge {
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 11px;
+            background: var(--qt-aviso);
+            color: var(--qt-on-aviso);
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-btn { width: 48px; min-width: 48px; height: 48px; padding: 0; border-radius: 50%; }
+        .icon-btn--tonal { background: var(--md-surface-container-highest); color: var(--md-on-surface); }
+        .icon-btn--danger { color: var(--md-error); }
+        .icon-btn--plain { color: var(--md-on-surface-variant); }
+
+        /* Chip de filtro (modo céntimos) */
+        .chip {
+            box-shadow: inset 0 0 0 1px var(--md-outline);
+            color: var(--md-on-surface-variant);
+            border-radius: var(--radius-s);
+            padding: 0 16px;
+        }
+        .chip.is-selected {
+            box-shadow: none;
+            background: var(--md-secondary-container);
+            color: var(--md-on-secondary-container);
+            padding-left: 12px;
+        }
+
+        /* Etiquetas (IVA, métodos de pago) */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            height: 24px;
+            padding: 0 8px;
+            border-radius: var(--radius-xs);
+            box-shadow: inset 0 0 0 1px var(--md-outline-variant);
+            color: var(--md-on-surface-variant);
+            font-size: 12px;
+            line-height: 16px;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Campos de texto (outlined) */
+        .field {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            border-radius: var(--radius-s);
+            border: 1px solid var(--md-outline);
+            background: transparent;
+            color: var(--md-on-surface);
+            font: 400 16px/24px var(--font);
+            outline: none;
+        }
+        .field::placeholder { color: var(--md-on-surface-variant); opacity: 1; }
+        .field:focus { border: 2px solid var(--md-primary); padding: 0 15px; }
+        .field--l { height: 56px; font-size: 24px; font-weight: 500; }
+        select.field { padding-right: 8px; }
+        select.field option { background: var(--md-surface-container-high); color: var(--md-on-surface); }
+        .field[readonly] { background: var(--md-surface-container-highest); border-color: transparent; }
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--md-primary); }
+
+        /* Botón segmentado M3 */
+        .segmented { display: flex; border-radius: var(--radius-m); box-shadow: inset 0 0 0 1px var(--md-outline); overflow: hidden; }
+        .segmented .seg {
+            flex: 1;
+            border-radius: 0;
+            min-height: 56px;
+            color: var(--md-on-surface);
+            box-shadow: inset -1px 0 0 var(--md-outline);
+            padding: 0 12px;
+        }
+        .segmented .seg:last-child { box-shadow: none; }
+        .segmented .seg .seg-check { display: none; }
+        .segmented .seg.is-selected { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+        .segmented .seg.is-selected .seg-check { display: inline-block; }
+        .segmented .seg.is-selected .seg-icon { display: none; }
+
+        /* =========================================================
+           BARRA SUPERIOR
+           ========================================================= */
+        .topbar {
+            height: 64px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px 0 16px;
+            padding-top: env(safe-area-inset-top);
+            background: var(--md-surface-container);
+            z-index: 20;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+        .brand-mark {
+            width: 40px; height: 40px;
+            border-radius: var(--radius-m);
+            background: var(--md-primary);
+            color: var(--md-on-primary);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .topbar .sep { width: 1px; height: 32px; background: var(--md-outline-variant); margin: 0 4px; }
+        .pill-amount {
+            padding: 2px 8px;
+            border-radius: var(--radius-s);
+            background: var(--md-surface);
+            color: var(--md-on-surface);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        @media (max-width: 1180px) { .opt-label { display: none; } }
+
+        /* =========================================================
+           ÁREA DE VENTA (3 PANELES)
+           ========================================================= */
+        .workspace {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            gap: var(--gap);
+            padding: var(--gap);
+            padding-bottom: max(var(--gap), env(safe-area-inset-bottom));
+            padding-left: max(var(--gap), env(safe-area-inset-left));
+            padding-right: max(var(--gap), env(safe-area-inset-right));
+        }
+        .panel {
+            background: var(--md-surface-container-low);
+            border-radius: var(--radius-l);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .col-ticket { width: 36%; container-type: inline-size; }
+        .col-keypad { width: 30%; padding: 8px; gap: 8px; }
+        .col-depts { flex: 1; padding: 12px; container-type: inline-size; }
+        @media (max-width: 1180px) { .col-ticket { width: 35%; } .col-keypad { width: 28%; } }
+        .panel-head { display: flex; align-items: center; gap: 4px; min-height: 56px; padding: 4px 4px 4px 16px; }
+        .panel-head .title-s, .panel-head .body-m { white-space: nowrap; }
+
+        /* ---- Ticket ---- */
+        .receipt-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+        .line {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto auto;
+            grid-template-areas: "name qty total del" "detail qty total del";
+            align-items: center;
+            column-gap: 4px;
+            min-height: 72px;
+            padding: 8px 4px 8px 8px;
+            border-bottom: 1px solid var(--md-outline-variant);
+        }
+        .line-name { grid-area: name; display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .line-detail { grid-area: detail; min-width: 0; }
+        .line .qty { grid-area: qty; display: flex; align-items: center; }
+        .line .qty-val { min-width: 28px; text-align: center; }
+        .line .line-total { grid-area: total; min-width: 84px; text-align: right; padding: 0 4px; }
+        .line .line-del { grid-area: del; }
+        /* Ticket estrecho: nombre a lo ancho y controles en la segunda fila */
+        @container (max-width: 520px) {
+            .line {
+                grid-template-columns: minmax(0, 1fr) auto auto;
+                grid-template-areas: "name name total" "detail qty del";
+                row-gap: 2px;
+                min-height: 84px;
+            }
+            .line .line-total { min-width: 0; }
+        }
+        @container (max-width: 420px) {
+            .tax-summary { display: none; }
+            .panel-head .btn-text { padding: 0 10px; }
+            .panel-head .btn-text > .ms { display: none; }
+        }
+        @keyframes flashHighlight {
+            0% { background-color: var(--md-primary-container); }
+            100% { background-color: transparent; }
+        }
+        .item-flash { animation: flashHighlight .7s ease-out; }
+        .empty {
+            height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; gap: 4px; padding: 24px;
+            color: var(--md-on-surface-variant);
+        }
+        .empty .empty-icon { font-size: 40px; margin-bottom: 8px; color: var(--md-on-surface-variant); }
+        .empty .body-m { max-width: 260px; }
+
+        .discount-bar {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            margin: 8px; padding: 0 4px 0 12px; min-height: 48px;
+            border-radius: var(--radius-m);
+            background: var(--qt-aviso-container);
+            color: var(--qt-on-aviso-container);
+        }
+        .ticket-foot { padding: 8px 16px 16px; border-top: 1px solid var(--md-outline-variant); display: flex; flex-direction: column; gap: 8px; }
+        .tax-toggle { padding: 0 8px; margin-left: -8px; min-height: 48px; color: var(--md-on-surface-variant); }
+        .tax-table { background: var(--md-surface-container-lowest); border-radius: var(--radius-m); padding: 8px 12px; }
+        .tax-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; font-size: 13px; line-height: 20px; }
+        .tax-grid > span:not(:first-child) { text-align: right; }
+        .tax-head { color: var(--md-on-surface-variant); font-size: 12px; font-weight: 500; padding-bottom: 4px; border-bottom: 1px solid var(--md-outline-variant); }
+        .tax-row { color: var(--md-on-surface-variant); padding: 2px 0; }
+        .tax-row.is-active { color: var(--md-on-surface); font-weight: 500; }
+        .total-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+        .charge-btn { width: 100%; justify-content: space-between; padding: 0 20px; }
+        .charge-btn .charge-amount { font-size: 22px; line-height: 28px; font-weight: 600; }
+
+        /* ---- Calculadora estilo Casio ---- */
+        .lcd {
+            position: relative;
+            flex-shrink: 0;
+            background: var(--qt-lcd-container);
+            color: var(--qt-on-lcd-container);
+            border-radius: var(--radius-m);
+            box-shadow: inset 0 0 0 1px var(--md-outline-variant);
+            padding: 10px 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: box-shadow .12s ease;
+        }
+        .lcd.lcd--qty { box-shadow: inset 0 0 0 2px var(--md-primary); }
+        .lcd.lcd--error { box-shadow: inset 0 0 0 2px var(--md-error); }
+        .lcd-top { display: flex; align-items: center; justify-content: space-between; min-height: 24px; gap: 8px; }
+        .lcd-ind {
+            display: inline-flex; align-items: center; gap: 2px;
+            height: 22px; padding: 0 6px;
+            border-radius: var(--radius-xs);
+            box-shadow: inset 0 0 0 1.5px currentColor;
+            font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+        }
+        .lcd-formula { text-align: right; min-height: 24px; }
+        .lcd-value { display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; }
+        .lcd-unit { font-size: 26px; line-height: 32px; font-weight: 500; }
+        .lcd-hint { text-align: right; font-size: 13px; line-height: 18px; min-height: 18px; }
+        .lcd-hint strong { font-weight: 600; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake { animation: shake .35s ease-in-out; }
+
+        .multi-row { display: flex; gap: 4px; flex-shrink: 0; }
+        .multi-row .btn { flex: 1; padding: 0 8px; border-radius: var(--radius-s); font-size: 16px; font-weight: 600; }
+        .multi-row .btn.reset { flex: 0 0 auto; padding: 0 12px; }
+
+        .keypad { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 8px; }
+        .key {
+            min-height: 64px;
+            padding: 4px;
+            border-radius: var(--radius-m);
+            background: var(--md-surface-container-highest);
+            color: var(--md-on-surface);
+            font-size: 32px;
+            line-height: 40px;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .key:active { transform: translateY(1px) scale(.985); }
+        .key .key-sub { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .3px; }
+        .key-fn { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+        .key-clear { background: var(--md-error-container); color: var(--md-on-error-container); }
+        .key-op { background: var(--md-primary); color: var(--md-on-primary); grid-row: span 2; }
+
+        /* ---- Departamentos y artículos rápidos ---- */
+        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; }
+        .section-head .title-s { display: flex; align-items: center; gap: 8px; }
+        .presets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex-shrink: 0; }
+        .depts-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 8px; }
+        .tile {
+            align-items: stretch;
+            justify-content: space-between;
+            flex-direction: column;
+            text-align: left;
+            white-space: normal;
+            padding: 10px 12px 12px 16px;
+            border-radius: var(--radius-m);
+            background: var(--md-surface-container-highest);
+            color: var(--md-on-surface);
+            min-width: 0;
+        }
+        .tile:active { transform: translateY(1px) scale(.99); }
+        .tile--preset { min-height: 72px; gap: 4px; }
+        .tile--preset .label-l { display: block; }
+        .tile--dept { min-height: 80px; box-shadow: inset 4px 0 0 var(--marker, transparent); }
+        .tile-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
+        .tile-icon { color: var(--md-primary); }
+        .dept-name { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
+        @container (max-width: 420px) {
+            .tile--dept { padding: 10px 8px 10px 12px; }
+            .tile--dept .dept-name { font-size: 14px; line-height: 20px; }
+            .tile--dept { --zh-size: 20px; }
+            html[data-lang2="zh"] .tile--dept { padding: 6px 8px 6px 12px; }
+            html[data-lang2="zh"] .tile--dept .dept-names { gap: 0; }
+            html[data-lang2="zh"] .tile--dept .dept-name { line-height: 18px; }
+            .tile--preset { --zh-size: 18px; }
+            .iva-prefix { display: none; }
+            .tile--preset .tag { display: none; }
+        }
+
+        /* =========================================================
+           DIÁLOGOS M3
+           ========================================================= */
+        .scrim {
+            position: fixed; inset: 0;
+            background: rgb(0 0 0 / .32);
+            z-index: 40;
+            align-items: center; justify-content: center;
+            padding: 24px;
+        }
+        .dialog {
+            width: 100%;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: var(--radius-xl);
+            background: var(--md-surface-container-high);
+            color: var(--md-on-surface);
+            box-shadow: 0 4px 8px 3px rgb(0 0 0 / .15), 0 1px 3px rgb(0 0 0 / .3);
+        }
+        .dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 16px 16px 24px; flex-shrink: 0; }
+        .dialog-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .dialog-title .ms { color: var(--md-on-surface-variant); }
+        .dialog-body { flex: 1; overflow-y: auto; padding: 0 24px 24px; }
+        .card-inset { background: var(--md-surface-container-lowest); border-radius: var(--radius-l); padding: 16px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .section-label { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .4px; color: var(--md-on-surface-variant); text-transform: uppercase; }
+
+        /* Cobro */
+        .checkout-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 24px; }
+        .amount-box { border-radius: var(--radius-l); padding: 16px; text-align: center; background: var(--md-surface-container-lowest); }
+        .change-box { border-radius: var(--radius-l); padding: 16px; text-align: center; background: var(--qt-cobrar-container); color: var(--qt-on-cobrar-container); }
+        .change-box[data-state="due"] { background: var(--md-error-container); color: var(--md-on-error-container); }
+        .change-box[data-state="card"] { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+        .cash-btn { min-height: 64px; font-size: 22px; line-height: 28px; font-weight: 500; flex-direction: column; gap: 0; }
+        .cash-btn .label-m { font-weight: 500; }
+
+        /* Selección de tarjeta (impresora, temas) */
+        .select-card {
+            text-align: left;
+            align-items: stretch;
+            justify-content: flex-start;
+            flex-direction: column;
+            white-space: normal;
+            gap: 6px;
+            padding: 14px 16px;
+            min-height: 0;
+            border-radius: var(--radius-l);
+            background: var(--md-surface-container-lowest);
+            box-shadow: inset 0 0 0 1px var(--md-outline-variant);
+            color: var(--md-on-surface);
+        }
+        .select-card.is-selected { box-shadow: inset 0 0 0 2px var(--md-primary); background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+        .select-card .sel-check { display: none; color: var(--md-primary); }
+        .select-card.is-selected .sel-check { display: inline-block; }
+        .swatches { display: flex; gap: 6px; }
+        .swatches span { width: 28px; height: 28px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .12); }
+
+        .list-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 8px 12px 16px; border-radius: var(--radius-m); background: var(--md-surface-container-lowest); }
+        .kv-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--md-outline-variant); }
+        .kv-row:last-child { border-bottom: 0; }
+        .z-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .z-table th { text-align: left; font-size: 12px; font-weight: 500; color: var(--md-on-surface-variant); padding: 0 0 8px; border-bottom: 1px solid var(--md-outline-variant); }
+        .z-table td { padding: 10px 0; border-bottom: 1px solid var(--md-outline-variant); }
+        .z-table tr:last-child td { border-bottom: 0; }
+        .z-table .r, .z-table th.r { text-align: right; }
+        .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .bt-status.is-ok { color: var(--qt-cobrar); font-weight: 600; }
+        .check-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; cursor: pointer; }
+        .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; cursor: pointer; }
+
+        /* =========================================================
+           SNACKBAR (sustituye a los toasts de colores)
+           ========================================================= */
+        .snack-zone {
+            position: fixed;
+            left: 50%;
+            top: calc(72px + env(safe-area-inset-top));
+            transform: translateX(-50%);
+            z-index: 50;
+            pointer-events: none;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .snackbar {
+            display: flex; align-items: center; gap: 12px;
+            min-height: 48px; max-width: 640px;
+            padding: 12px 20px 12px 16px;
+            border-radius: var(--radius-s);
+            background: var(--md-inverse-surface);
+            color: var(--md-inverse-on-surface);
+            font-size: 14px; line-height: 20px; font-weight: 500;
+            box-shadow: 0 2px 6px 2px rgb(0 0 0 / .15), 0 1px 2px rgb(0 0 0 / .3);
+            transition: opacity .2s ease;
+        }
+        .snackbar .ms { color: var(--md-inverse-primary); }
+        .snackbar--success .ms { color: var(--qt-snack-success); }
+        .snackbar--error .ms { color: var(--qt-snack-error); }
+        .snackbar--amber .ms { color: var(--qt-snack-warning); }
+
+        /* =========================================================
+           ALTO CONTRASTE PARA LUZ INTENSA (opcional)
+           ========================================================= */
+        html[data-contrast="high"] .key,
+        html[data-contrast="high"] .tile,
+        html[data-contrast="high"] .lcd { box-shadow: inset 0 0 0 1px var(--md-outline); }
+        html[data-contrast="high"] .tile--dept { box-shadow: inset 4px 0 0 var(--marker, transparent), inset 0 0 0 1px var(--md-outline); }
+        html[data-contrast="high"] .lcd.lcd--qty { box-shadow: inset 0 0 0 2px var(--md-primary); }
+        html[data-contrast="high"] .lcd.lcd--error { box-shadow: inset 0 0 0 2px var(--md-error); }
+        html[data-contrast="high"] .muted,
+        html[data-contrast="high"] .tag,
+        html[data-contrast="high"] .tax-row { color: var(--md-on-surface); }
+        html[data-contrast="high"] .num { font-weight: 600; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .animate-shake, .item-flash { animation: none; }
+            .btn, .key, .tile { transition: none; }
+        }
+
+        /* Thermal 80mm / 58mm Receipt Print Styles */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            #thermal-print-area, #thermal-print-area * {
+                visibility: visible !important;
+            }
+            #thermal-print-area {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: var(--thermal-paper-width, 80mm) !important;
+                padding: 3mm !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-family: 'Roboto Mono', 'Courier New', monospace !important;
+                font-size: 11px !important;
+                line-height: 1.35 !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA SUPERIOR -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark"><span class="ms">point_of_sale</span></div>
+            <div style="min-width:0">
+                <h1 id="nav-shop-name" class="title-m truncate">Bazar &amp; Multiprecio Central</h1>
+                <p class="body-m muted row gap-8">
+                    <span id="live-clock" class="num">--:--:--</span>
+                    <span class="tag">IVA incluido</span>
+                </p>
+            </div>
+        </div>
+
+        <button onclick="openHeldTicketsModal()" class="btn btn-tonal" title="Tickets en espera">
+            <span class="ms ms-20">pause_circle</span>
+            <span class="opt-label bi" data-zh="取单">En espera</span>
+            <span id="held-count-badge" class="badge num hidden">0</span>
+        </button>
+
+        <button id="cents-mode-btn" onclick="toggleCentsMode()" class="btn chip" aria-pressed="false" title="Modo caja registradora: escribir 450 marca 4,50 €">
+            <span id="cents-mode-icon" class="ms ms-18 hidden">check</span>
+            <span class="bi" data-zh="按分输入">Céntimos 00</span>
+            <span id="cents-mode-status" class="hidden">OFF</span>
+        </button>
+
+        <button id="sound-toggle-btn" onclick="toggleSound()" class="btn icon-btn icon-btn--plain" aria-pressed="true" title="Sonido del teclado" aria-label="Sonido del teclado">
+            <span id="sound-icon" class="ms">volume_up</span>
+        </button>
+
+        <span class="sep" aria-hidden="true"></span>
+
+        <button onclick="openPrinterModal()" class="btn btn-text" title="Configurar impresora térmica (58 mm / 80 mm, Bluetooth, RawBT, AirPrint)">
+            <span id="nav-printer-icon" class="ms ms-20">print</span>
+            <span class="opt-label bi"><span class="zh" lang="zh-Hans">打印机</span><span id="nav-printer-label">Impresora</span></span>
+        </button>
+
+        <button onclick="openZReportModal()" class="btn btn-tonal" title="Cierre de caja (Z-Report)">
+            <span class="ms ms-20">bar_chart</span>
+            <span class="opt-label bi" data-zh="日结">Cierre de caja</span>
+            <span id="today-sales-pill" class="pill-amount num">0,00 €</span>
+        </button>
+
+        <button onclick="openSettingsModal()" class="btn btn-text" title="Botones, departamentos e IVA">
+            <span class="ms ms-20">tune</span>
+            <span class="opt-label bi" data-zh="设置">Ajustes</span>
+        </button>
+
+        <button onclick="openAppearanceModal()" class="btn icon-btn icon-btn--plain" title="Apariencia: tema de color" aria-label="Apariencia">
+            <span class="ms">palette</span>
+        </button>
+    </header>
+
+    <!-- ÁREA DE VENTA (sin desplazamiento de página) -->
+    <main class="workspace">
+
+        <!-- ==========================================================
+             PANEL IZQUIERDO: TICKET
+             ========================================================== -->
+        <section class="panel col-ticket" aria-label="Ticket actual">
+            <div class="panel-head">
+                <div class="grow stack-4" style="gap:0;min-width:0">
+                    <span class="title-s truncate"><span class="zh inline" lang="zh-Hans">小票</span> Ticket <span class="num" id="current-ticket-number">#T-0001</span></span>
+                    <span class="body-m muted num truncate" id="ticket-item-count">0 líneas</span>
+                </div>
+                <button onclick="holdCurrentTicket()" class="btn btn-text" title="Aparcar ticket actual" aria-label="Poner en espera">
+                    <span class="ms ms-20">pause</span><span class="act-label bi" data-zh="挂单">Espera</span>
+                </button>
+                <button onclick="openDiscountModal()" class="btn btn-text" title="Aplicar descuento" aria-label="Descuento">
+                    <span class="ms ms-20">percent</span><span class="act-label bi" data-zh="折扣">Dto.</span>
+                </button>
+                <button onclick="clearCurrentTicket()" class="btn btn-text danger" title="Vaciar ticket" aria-label="Anular ticket">
+                    <span class="ms ms-20">delete</span><span class="act-label bi" data-zh="清空">Anular</span>
+                </button>
+            </div>
+
+            <!-- Líneas del ticket -->
+            <div id="receipt-items-container" class="receipt-list">
+                <!-- renderReceipt() -->
+            </div>
+
+            <!-- Descuento activo -->
+            <div id="active-discount-bar" class="discount-bar hidden">
+                <div class="row gap-8 label-l">
+                    <span class="ms ms-20">sell</span>
+                    <span class="zh inline" lang="zh-Hans" style="--zh-size:18px">折扣</span>
+                    <span id="discount-label-text">Descuento aplicado</span>
+                </div>
+                <div class="row gap-4">
+                    <span id="discount-amount-text" class="title-m num">-0,00 €</span>
+                    <button onclick="removeDiscount()" class="btn icon-btn" aria-label="Quitar descuento">
+                        <span class="ms ms-20">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Total, desglose de IVA y COBRAR -->
+            <div class="ticket-foot">
+                <div class="row between">
+                    <button class="btn tax-toggle label-l" onclick="toggleTaxBreakdown()" aria-expanded="false" id="tax-toggle-btn">
+                        <span id="tax-toggle-icon" class="ms ms-20">expand_more</span>
+                        <span class="bi start" data-zh="税额明细">Desglose de IVA</span>
+                    </button>
+                    <span id="receipt-subtotal-base" class="body-m muted num tax-summary">Base: 0,00 € • IVA: 0,00 €</span>
+                </div>
+
+                <div id="tax-breakdown-box" class="tax-table hidden">
+                    <div class="tax-grid tax-head">
+                        <span>Tipo IVA</span>
+                        <span>Base imp.</span>
+                        <span>Cuota IVA</span>
+                        <span>Total</span>
+                    </div>
+                    <div id="live-tax-breakdown" class="num">
+                        <!-- Filas 4 %, 10 %, 21 % -->
+                    </div>
+                </div>
+
+                <div class="total-row">
+                    <span class="title-s muted bi start" data-zh="合计">Total a pagar</span>
+                    <span id="receipt-grand-total" class="display-m num">0,00 €</span>
+                </div>
+
+                <button id="charge-main-btn" onclick="openCheckoutModal()" class="btn btn-cobrar charge-btn">
+                    <span class="row gap-12">
+                        <span class="ms">point_of_sale</span>
+                        <span class="title-l bi start" data-zh="收款">Cobrar</span>
+                    </span>
+                    <span class="row gap-4">
+                        <span id="charge-btn-amount" class="charge-amount num">0,00 €</span>
+                        <span class="ms">chevron_right</span>
+                    </span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             PANEL CENTRAL: CALCULADORA (estilo Casio)
+             ========================================================== -->
+        <section class="panel col-keypad" aria-label="Teclado de precio">
+
+            <!-- Pantalla LCD -->
+            <div id="keypad-display-box" class="lcd" aria-live="polite">
+                <div class="lcd-top">
+                    <span id="qty-badge" class="lcd-ind num hidden">
+                        <span id="active-qty-text">Cant ×1</span>
+                    </span>
+                    <span class="grow"></span>
+                    <span id="entry-mode-label" class="lcd-ind hidden">Precio libre</span>
+                </div>
+                <div id="locked-price-formula" class="lcd-formula title-m num hidden">0,00 € × 1 uds</div>
+                <div class="lcd-value">
+                    <span id="keypad-value-display" class="display-l num">0.00</span>
+                    <span id="keypad-unit-symbol" class="lcd-unit">€</span>
+                </div>
+                <p id="keypad-helper-hint" class="lcd-hint">
+                    <span class="zh" lang="zh-Hans">价格 → ×数量 → 分类</span>
+                    <span>Precio → <strong>× Cant.</strong> → <strong>Departamento</strong></span>
+                </p>
+            </div>
+
+            <!-- Multiplicadores rápidos -->
+            <div class="multi-row">
+                <button onclick="setQuickMultiplier(2)" class="btn btn-tonal num">×2</button>
+                <button onclick="setQuickMultiplier(3)" class="btn btn-tonal num">×3</button>
+                <button onclick="setQuickMultiplier(5)" class="btn btn-tonal num">×5</button>
+                <button onclick="setQuickMultiplier(10)" class="btn btn-tonal num">×10</button>
+                <button id="reset-qty-btn" onclick="resetMultiplier()" class="btn btn-outlined reset num hidden" title="Quitar cantidad">1×</button>
+            </div>
+
+            <!-- Nota opcional -->
+            <input id="custom-item-note" type="text" placeholder="Nota opcional (ej. Tornillos)" class="field" aria-label="Nota opcional para la línea">
+
+            <!-- Teclado 4 × 4 -->
+            <div class="keypad">
+                <button onclick="pressDigit('7')" class="btn key">7</button>
+                <button onclick="pressDigit('8')" class="btn key">8</button>
+                <button onclick="pressDigit('9')" class="btn key">9</button>
+                <button onclick="pressBackspace()" class="btn key key-fn" aria-label="Borrar último dígito">
+                    <span class="ms">backspace</span>
+                    <span class="key-sub bi" data-zh="删除">Borrar</span>
+                </button>
+
+                <button onclick="pressDigit('4')" class="btn key">4</button>
+                <button onclick="pressDigit('5')" class="btn key">5</button>
+                <button onclick="pressDigit('6')" class="btn key">6</button>
+                <button onclick="pressClear()" class="btn key key-clear" aria-label="Limpiar importe">
+                    <span>C</span>
+                    <span class="key-sub bi" data-zh="清除">Limpiar</span>
+                </button>
+
+                <button onclick="pressDigit('1')" class="btn key">1</button>
+                <button onclick="pressDigit('2')" class="btn key">2</button>
+                <button onclick="pressDigit('3')" class="btn key">3</button>
+                <button id="qty-multiply-btn" onclick="pressQtyMultiplier()" class="btn key key-op" aria-label="Multiplicar cantidad">
+                    <span>×</span>
+                    <span class="key-sub bi" data-zh="数量">Cant.</span>
+                    <span id="qty-multiply-subtext" class="hidden">Multiplicar precio</span>
+                </button>
+
+                <button onclick="pressDigit('0')" class="btn key">0</button>
+                <button onclick="pressDigit('00')" class="btn key">00</button>
+                <button onclick="pressDecimal()" class="btn key" aria-label="Coma decimal">,</button>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             PANEL DERECHO: ARTÍCULOS RÁPIDOS Y DEPARTAMENTOS
+             ========================================================== -->
+        <section class="panel col-depts" aria-label="Artículos y departamentos">
+            <div class="section-head">
+                <h2 class="title-s"><span class="ms ms-20 muted">bolt</span><span class="bi inline" data-zh="快捷商品">Artículos rápidos (precio fijo)</span></h2>
+                <button onclick="openSettingsModal('presets')" class="btn btn-text"><span class="bi" data-zh="编辑">Editar</span></button>
+            </div>
+            <div id="quick-presets-grid" class="presets-grid">
+                <!-- renderQuickPresets() -->
+            </div>
+
+            <hr class="divider" style="margin:12px 0 4px">
+
+            <div class="section-head">
+                <h2 class="title-s"><span class="ms ms-20 muted">grid_view</span><span class="bi inline" data-zh="商品分类">Departamentos</span></h2>
+            </div>
+            <div id="departments-grid" class="depts-grid">
+                <!-- renderDepartments() -->
+            </div>
+        </section>
+    </main>
+
+    <!-- AVISOS (snackbar) -->
+    <div id="toast-container" class="snack-zone" role="status" aria-live="polite"></div>
+
+    <!-- ==========================================================
+         DIÁLOGO 1: COBRO Y CAMBIO
+         ========================================================== -->
+    <div id="checkout-modal" class="scrim hidden">
+        <div class="dialog" style="max-width:900px" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+            <div class="dialog-head">
+                <div class="dialog-title">
+                    <span class="ms">payments</span>
+                    <div>
+                        <h3 id="checkout-title" class="headline-s bi start" data-zh="结账">Finalizar venta</h3>
+                        <p class="body-m muted num" id="checkout-ticket-subtitle">Ticket #T-0001 • IVA incluido</p>
+                    </div>
+                </div>
+                <button onclick="closeCheckoutModal()" class="btn icon-btn icon-btn--plain" aria-label="Cerrar">
+                    <span class="ms">close</span>
+                </button>
+            </div>
+
+            <div class="dialog-body">
+                <div class="checkout-grid">
+                    <!-- Columna izquierda: total, método y cambio -->
+                    <div class="stack-16">
+                        <div class="amount-box">
+                            <span class="section-label bi" data-zh="应收金额">Total a cobrar</span>
+                            <div id="checkout-total-due" class="display-l num">0,00 €</div>
+                        </div>
+
+                        <div class="stack-8">
+                            <span class="section-label bi start" data-zh="付款方式">Método de pago</span>
+                            <div class="segmented" role="group" aria-label="Método de pago">
+                                <button id="pay-method-cash" onclick="selectPaymentMethod('cash')" class="btn seg is-selected" aria-pressed="true">
+                                    <span class="ms ms-20 seg-check">check</span><span class="ms ms-20 seg-icon">payments</span><span class="bi" data-zh="现金">Efectivo</span>
+                                </button>
+                                <button id="pay-method-card" onclick="selectPaymentMethod('card')" class="btn seg" aria-pressed="false">
+                                    <span class="ms ms-20 seg-check">check</span><span class="ms ms-20 seg-icon">credit_card</span><span class="bi" data-zh="刷卡">Tarjeta</span>
+                                </button>
+                                <button id="pay-method-mixed" onclick="selectPaymentMethod('mixed')" class="btn seg" aria-pressed="false">
+                                    <span class="ms ms-20 seg-check">check</span><span class="ms ms-20 seg-icon">call_split</span><span class="bi" data-zh="混合">Mixto</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="change-result-box" class="change-box" data-state="ok">
+                            <span id="change-status-label" class="label-l bi" data-zh="找零">Cambio a devolver</span>
+                            <div id="checkout-change-amount" class="display-l num">0,00 €</div>
+                        </div>
+                    </div>
+
+                    <!-- Columna derecha: billetes, efectivo recibido y acciones -->
+                    <div class="stack-16">
+                        <div id="cash-calculator-section" class="stack-16">
+                            <div class="stack-8">
+                                <span class="section-label bi start" data-zh="快捷金额">Billetes rápidos / efectivo entregado</span>
+                                <div class="grid-3" style="gap:8px">
+                                    <button onclick="setQuickCash('exact')" class="btn btn-tonal cash-btn">
+                                        <span class="label-l bi" data-zh="金额正好">Importe exacto</span>
+                                        <span id="exact-cash-btn-label" class="title-m num">0,00 €</span>
+                                    </button>
+                                    <button onclick="setQuickCash(5)" class="btn btn-outlined cash-btn num">5 €</button>
+                                    <button onclick="setQuickCash(10)" class="btn btn-outlined cash-btn num">10 €</button>
+                                    <button onclick="setQuickCash(20)" class="btn btn-outlined cash-btn num">20 €</button>
+                                    <button onclick="setQuickCash(50)" class="btn btn-outlined cash-btn num">50 €</button>
+                                    <button onclick="setQuickCash(100)" class="btn btn-outlined cash-btn num">100 €</button>
+                                </div>
+                            </div>
+
+                            <div class="grid-2">
+                                <label class="stack-4">
+                                    <span class="body-m muted bi start" data-zh="实收现金">Efectivo recibido (€)</span>
+                                    <input id="cash-tendered-input" type="number" step="0.01" inputmode="decimal" oninput="recalculateChange()" class="field field--l num">
+                                </label>
+                                <label id="mixed-card-column" class="stack-4 hidden">
+                                    <span class="body-m muted bi start" data-zh="其余刷卡">Resto en tarjeta (€)</span>
+                                    <input id="mixed-card-input" type="text" readonly class="field field--l num">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid-2" style="margin-top:auto">
+                            <button onclick="completeSale(true)" class="btn btn-outlined" style="min-height:72px">
+                                <span class="ms">print</span>
+                                <span class="title-m bi" data-zh="收款并打印">Cobrar e imprimir</span>
+                            </button>
+                            <button onclick="completeSale(false)" class="btn btn-cobrar">
+                                <span class="ms">check_circle</span>
+                                <span class="title-l bi" data-zh="确认收款">Confirmar venta</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         DIÁLOGO 2: CIERRE DE CAJA (Z-REPORT) E HISTORIAL
+         ========================================================== -->
+    <div id="zreport-modal" class="scrim hidden">
+        <div class="dialog" style="max-width:1120px;height:88vh" role="dialog" aria-modal="true" aria-labelledby="z-title">
+            <div class="dialog-head">
+                <div class="dialog-title">
+                    <span class="ms">bar_chart</span>
+                    <div>
+                        <h3 id="z-title" class="headline-s bi start" data-zh="日结和历史记录">Cierre de caja e historial</h3>
+                        <p class="body-m muted">Resumen fiscal por tipos de IVA (4 %, 10 %, 21 %) y arqueo de pagos</p>
+                    </div>
+                </div>
+                <div class="row gap-8">
+                    <button onclick="exportSalesCSV()" class="btn btn-tonal">
+                        <span class="ms ms-20">download</span><span class="bi" data-zh="导出表格">Exportar CSV</span>
+                    </button>
+                    <button onclick="printZReportThermal()" class="btn btn-tonal">
+                        <span class="ms ms-20">print</span><span class="bi" data-zh="打印日结">Imprimir Z 80 mm</span>
+                    </button>
+                    <button onclick="resetDaySalesPrompt()" class="btn btn-text danger">
+                        <span class="ms ms-20">delete_sweep</span><span class="bi" data-zh="日结清零">Cerrar día</span>
+                    </button>
+                    <button onclick="closeZReportModal()" class="btn icon-btn icon-btn--plain" aria-label="Cerrar">
+                        <span class="ms">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="dialog-body stack-16">
+                <div class="grid-4">
+                    <div class="card-inset stack-4">
+                        <span class="section-label bi start" data-zh="销售总额">Total ventas bruto</span>
+                        <div id="z-total-sales" class="headline-s num">0,00 €</div>
+                        <span id="z-ticket-count" class="body-m muted">0 operaciones válidas</span>
+                    </div>
+                    <div class="card-inset stack-4">
+                        <span class="section-label bi start" data-zh="现金总额">Total efectivo (cajón)</span>
+                        <div id="z-cash-total" class="headline-s num">0,00 €</div>
+                        <span class="body-m muted">Arqueo físico esperado</span>
+                    </div>
+                    <div class="card-inset stack-4">
+                        <span class="section-label bi start" data-zh="刷卡总额">Total tarjeta / TPV</span>
+                        <div id="z-card-total" class="headline-s num">0,00 €</div>
+                        <span class="body-m muted">Comprobantes datáfono</span>
+                    </div>
+                    <div class="card-inset stack-4">
+                        <span class="section-label bi start" data-zh="税基和税额">Base imponible + IVA</span>
+                        <div id="z-net-base" class="title-l num">Base: 0,00 €</div>
+                        <span id="z-total-iva" class="body-m muted num">Cuota IVA: 0,00 €</span>
+                    </div>
+                </div>
+
+                <div class="checkout-grid" style="grid-template-columns:5fr 7fr">
+                    <div class="stack-16">
+                        <div class="card-inset">
+                            <h4 class="title-s row gap-8" style="margin-bottom:12px"><span class="ms ms-20 muted">balance</span>Desglose fiscal de IVA (España)</h4>
+                            <table class="z-table num">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo IVA</th>
+                                        <th class="r">Base imp.</th>
+                                        <th class="r">Cuota IVA</th>
+                                        <th class="r">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="z-iva-table-body">
+                                    <!-- JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-inset">
+                            <h4 class="title-s row gap-8" style="margin-bottom:4px"><span class="ms ms-20 muted">folder</span>Ventas por departamento</h4>
+                            <div id="z-dept-breakdown" style="max-height:200px;overflow-y:auto">
+                                <!-- JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-inset" style="display:flex;flex-direction:column">
+                        <div class="row between" style="margin-bottom:8px">
+                            <h4 class="title-s row gap-8"><span class="ms ms-20 muted">receipt_long</span>Historial de tickets emitidos</h4>
+                            <span class="body-m muted">Reimprime o anula un ticket</span>
+                        </div>
+                        <div id="z-tickets-list" style="flex:1;overflow-y:auto;max-height:360px">
+                            <!-- JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         DIÁLOGO 3: BOTONES, DEPARTAMENTOS E IVA
+         ========================================================== -->
+    <div id="settings-modal" class="scrim hidden">
+        <div class="dialog" style="max-width:980px;height:88vh" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="dialog-head">
+                <div class="dialog-title">
+                    <span class="ms">tune</span>
+                    <div>
+                        <h3 id="settings-title" class="headline-s bi start" data-zh="设置">Botones, departamentos e IVA</h3>
+                        <p class="body-m muted">Nombres, tipos de IVA, marca de color y artículos rápidos</p>
+                    </div>
+                </div>
+                <div class="row gap-8">
+                    <button onclick="resetDefaultSettings()" class="btn btn-text">
+                        <span class="ms ms-20">restart_alt</span><span class="bi" data-zh="恢复默认">Restaurar fábrica</span>
+                    </button>
+                    <button onclick="saveSettingsFromModal()" class="btn btn-filled">
+                        <span class="ms ms-20">check</span><span class="bi" data-zh="保存">Guardar cambios</span>
+                    </button>
+                    <button onclick="closeSettingsModal()" class="btn icon-btn icon-btn--plain" aria-label="Cerrar">
+                        <span class="ms">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="dialog-body stack-16">
+                <!-- Idioma secundario: por defecto solo español -->
+                <div class="card-inset stack-16">
+                    <div class="stack-4">
+                        <span class="title-m row gap-8"><span class="ms ms-20 muted">translate</span>Idioma secundario <span class="zh inline" lang="zh-Hans" style="--zh-size:20px">第二语言</span></span>
+                        <span class="body-m muted">Añade la traducción al chino encima de los textos de los botones, con letra grande. El español sigue siendo el idioma principal. Se aplica al momento.</span>
+                    </div>
+                    <div class="segmented" role="group" aria-label="Idioma secundario">
+                        <button id="lang2-none" type="button" onclick="setSecondaryLang(null)" class="btn seg">
+                            <span class="ms ms-20 seg-check">check</span><span class="ms ms-20 seg-icon">language</span><span>Solo español</span>
+                        </button>
+                        <button id="lang2-zh" type="button" onclick="setSecondaryLang('zh')" class="btn seg">
+                            <span class="ms ms-20 seg-check">check</span><span class="ms ms-20 seg-icon">translate</span>
+                            <span>Español + chino <span lang="zh-Hans" style="font-family:var(--zh-font);font-size:20px;font-weight:500">中文</span></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Instalar como app (PWA) -->
+                <div id="install-card" class="card-inset stack-8">
+                    <span class="title-m row gap-8"><span class="ms ms-20 muted">install_mobile</span>Instalar en este dispositivo <span class="zh inline" lang="zh-Hans" style="--zh-size:20px">安装到本机</span></span>
+                    <span id="install-status" class="body-m muted">Abre la app desde su dirección web para poder instalarla.</span>
+                    <button id="install-btn" type="button" onclick="installApp()" class="btn btn-filled hidden" style="align-self:flex-start">
+                        <span class="ms ms-20">install_mobile</span><span class="bi" data-zh="安装">Instalar app</span>
+                    </button>
+                    <span class="body-m muted">Las ventas y los ajustes se guardan solo en este dispositivo. Exporta el CSV del cierre cada día como copia.</span>
+                </div>
+
+                <div class="card-inset grid-3">
+                    <label class="stack-4">
+                        <span class="body-m muted">Nombre del comercio</span>
+                        <input id="set-shop-name" type="text" class="field">
+                    </label>
+                    <label class="stack-4">
+                        <span class="body-m muted">NIF / CIF (para el ticket)</span>
+                        <input id="set-shop-nif" type="text" class="field">
+                    </label>
+                    <label class="stack-4">
+                        <span class="body-m muted">Dirección / teléfono</span>
+                        <input id="set-shop-address" type="text" class="field">
+                    </label>
+                </div>
+
+                <div class="stack-8">
+                    <span class="section-label bi start" data-zh="商品分类">9 departamentos de precio libre</span>
+                    <div id="settings-departments-list" class="grid-3">
+                        <!-- JS -->
+                    </div>
+                </div>
+
+                <div class="stack-8">
+                    <span class="section-label bi start" data-zh="快捷商品">6 artículos rápidos (precio fijo)</span>
+                    <div id="settings-presets-list" class="grid-3">
+                        <!-- JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         DIÁLOGO 4: DESCUENTO
+         ========================================================== -->
+    <div id="discount-modal" class="scrim hidden">
+        <div class="dialog" style="max-width:480px" role="dialog" aria-modal="true" aria-labelledby="discount-title">
+            <div class="dialog-head">
+                <div class="dialog-title">
+                    <span class="ms">percent</span>
+                    <h3 id="discount-title" class="headline-s bi start" data-zh="整单折扣">Descuento al ticket</h3>
+                </div>
+                <button onclick="closeDiscountModal()" class="btn icon-btn icon-btn--plain" aria-label="Cerrar">
+                    <span class="ms">close</span>
+                </button>
+            </div>
+            <div class="dialog-body stack-16">
+                <div class="grid-4" style="gap:8px">
+                    <button onclick="applyTicketDiscount('percent', 5)" class="btn btn-tonal title-m num" style="min-height:56px">−5 %</button>
+                    <button onclick="applyTicketDiscount('percent', 10)" class="btn btn-tonal title-m num" style="min-height:56px">−10 %</button>
+                    <button onclick="applyTicketDiscount('percent', 15)" class="btn btn-tonal title-m num" style="min-height:56px">−15 %</button>
+                    <button onclick="applyTicketDiscount('percent', 20)" class="btn btn-tonal title-m num" style="min-height:56px">−20 %</button>
+                </div>
+                <hr class="divider">
+                <label class="stack-4">
+                    <span class="body-m muted bi start" data-zh="固定金额折扣">Descuento fijo en euros (€)</span>
+                    <span class="row gap-8">
+                        <input id="custom-discount-euro" type="number" step="0.10" inputmode="decimal" placeholder="Ej. 2,50" class="field num grow">
+                        <button onclick="applyCustomEuroDiscount()" class="btn btn-filled"><span class="bi" data-zh="确定">Aplicar</span></button>
+                    </span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIÁLOGO: TICKETS EN ESPERA -->
+    <div id="held-tickets-modal" class="scrim hidden">
+        <div class="dialog" style="max-width:600px" role="dialog" aria-modal="true" aria-labelledby="held-title">
+            <div class="dialog-head">
+                <div class="dialog-title">
+                    <span class="ms">pause_circle</span>
+                    <h3 id="held-title" class="headline-s bi start" data-zh="挂单列表">Tickets en espera</h3>
+                </div>
+                <button onclick="closeHeldTicketsModal()" class="btn icon-btn icon-btn--plain" aria-label="Cerrar">
+                    <span class="ms">close</span>
+                </button>
+            </div>
+            <div class="dialog-body">
+                <div id="held-tickets-list" class="stack-8" style="max-height:60vh;overflow-y:auto">
+                    <!-- JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         DIÁLOGO 5: IMPRESORA TÉRMICA (ESC/POS Y NAVEGADOR)
+         ========================================================== -->
+    <div id="printer-modal" class="scrim hidden">
+        <div class="dialog" style="max-width:880px;max-height:90vh" role="dialog" aria-modal="true" aria-labelledby="printer-title">
+            <div class="dialog-head">
+                <div class="dialog-title">
+                    <span class="ms">print</span>
+                    <div>
+                        <h3 id="printer-title" class="headline-s bi start" data-zh="小票打印机">Impresora térmica de tickets</h3>
+                        <p class="body-m muted">Impresoras de 58 mm y 80 mm en Android e iPad (Bluetooth, USB, Wi-Fi)</p>
+                    </div>
+                </div>
+                <div class="row gap-8">
+                    <button onclick="testThermalPrinter()" class="btn btn-tonal">
+                        <span class="ms ms-20">receipt</span><span class="bi" data-zh="打印测试页">Ticket de prueba</span>
+                    </button>
+                    <button onclick="savePrinterSettings()" class="btn btn-filled">
+                        <span class="ms ms-20">check</span><span class="bi" data-zh="保存">Guardar</span>
+                    </button>
+                    <button onclick="closePrinterModal()" class="btn icon-btn icon-btn--plain" aria-label="Cerrar">
+                        <span class="ms">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="dialog-body stack-16">
+                <div class="stack-8">
+                    <span class="section-label">1. Método de conexión con la tablet</span>
+                    <div class="grid-3">
+                        <button type="button" onclick="selectPrinterMode('browser')" id="pmode-browser" class="btn select-card is-selected">
+                            <span class="row between"><span class="tag">Universal (iPad / Android)</span><span class="ms sel-check">check_circle</span></span>
+                            <span class="row gap-8 title-m"><span class="ms ms-20">wifi</span><span class="bi start" data-zh="系统打印">Diálogo nativo / AirPrint</span></span>
+                            <span class="body-m muted">Usa el servicio de impresión del sistema (Wi-Fi, USB o Bluetooth emparejado en ajustes).</span>
+                        </button>
+                        <button type="button" onclick="selectPrinterMode('bluetooth')" id="pmode-bluetooth" class="btn select-card">
+                            <span class="row between"><span class="tag">Android Chrome directo</span><span class="ms sel-check">check_circle</span></span>
+                            <span class="row gap-8 title-m"><span class="ms ms-20">bluetooth</span><span class="bi start" data-zh="蓝牙直连打印">Bluetooth ESC/POS directo</span></span>
+                            <span class="body-m muted">Impresión en 1 toque sin ventanas emergentes y apertura del cajón portamonedas.</span>
+                        </button>
+                        <button type="button" onclick="selectPrinterMode('rawbt')" id="pmode-rawbt" class="btn select-card">
+                            <span class="row between"><span class="tag">App puente (RawBT)</span><span class="ms sel-check">check_circle</span></span>
+                            <span class="row gap-8 title-m"><span class="ms ms-20">bolt</span><span class="bi start" data-zh="RawBT 打印">App RawBT (ESC/POS)</span></span>
+                            <span class="body-m muted">Envía comandos térmicos a través de la app gratuita RawBT (USB, red LAN o Bluetooth).</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="bt-pairing-panel" class="card-inset row between gap-16 hidden">
+                    <div class="row gap-12">
+                        <span class="ms">bluetooth_searching</span>
+                        <div>
+                            <div class="title-s">Estado Bluetooth: <span id="bt-device-status" class="bt-status body-m">No conectado</span></div>
+                            <p class="body-m muted">Enciende la impresora Bluetooth y pulsa Buscar (requiere Chrome en Android o PC).</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="connectWebBluetoothPrinter()" class="btn btn-filled">
+                        <span class="ms ms-20">search</span><span class="bi" data-zh="搜索打印机">Buscar impresora</span>
+                    </button>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card-inset stack-8">
+                        <span class="section-label">2. Ancho del rollo de papel</span>
+                        <div class="grid-2" style="gap:8px">
+                            <button type="button" onclick="selectPaperWidth('80mm')" id="paper-width-80" class="btn select-card is-selected" style="align-items:center;text-align:center">
+                                <span class="title-m num">80 mm</span>
+                                <span class="body-m muted">Estándar TPV (48 col.)</span>
+                            </button>
+                            <button type="button" onclick="selectPaperWidth('58mm')" id="paper-width-58" class="btn select-card" style="align-items:center;text-align:center">
+                                <span class="title-m num">58 mm</span>
+                                <span class="body-m muted">Portátil (32 col.)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card-inset stack-4">
+                        <span class="section-label">3. Automatización en el cobro</span>
+                        <label class="check-row body-m">
+                            <span class="bi start" data-zh="收款后自动打印">Imprimir ticket automáticamente al cobrar</span>
+                            <input id="chk-auto-print" type="checkbox">
+                        </label>
+                        <label class="check-row body-m">
+                            <span class="bi start" data-zh="打开钱箱">Abrir cajón portamonedas (RJ11 / ESC/POS)</span>
+                            <input id="chk-cash-drawer" type="checkbox" checked>
+                        </label>
+                        <label class="check-row body-m">
+                            <span class="bi start" data-zh="自动切纸">Cortar papel automáticamente (guillotina)</span>
+                            <input id="chk-auto-cut" type="checkbox" checked>
+                        </label>
+                    </div>
+                </div>
+
+                <label class="card-inset stack-8">
+                    <span class="section-label">4. Mensaje al pie del ticket</span>
+                    <input id="printer-footer-msg" type="text" placeholder="Ej. ¡Gracias por su visita! Cambios en 15 días con ticket." class="field">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         DIÁLOGO 6: APARIENCIA (TEMAS MATERIAL 3)
+         ========================================================== -->
+    <div id="appearance-modal" class="scrim hidden">
+        <div class="dialog" style="max-width:760px" role="dialog" aria-modal="true" aria-labelledby="appearance-title">
+            <div class="dialog-head">
+                <div class="dialog-title">
+                    <span class="ms">palette</span>
+                    <div>
+                        <h3 id="appearance-title" class="headline-s bi start" data-zh="外观">Apariencia</h3>
+                        <p class="body-m muted">Tema de color Material 3. Cobrar, cancelar y aviso no cambian entre temas.</p>
+                    </div>
+                </div>
+                <button onclick="closeAppearanceModal()" class="btn icon-btn icon-btn--plain" aria-label="Cerrar">
+                    <span class="ms">close</span>
+                </button>
+            </div>
+            <div class="dialog-body stack-16">
+                <div id="theme-cards" class="grid-2">
+                    <!-- renderAppearance() -->
+                </div>
+
+                <div class="stack-8">
+                    <span class="section-label">Modo</span>
+                    <div class="segmented" role="group" aria-label="Modo de color">
+                        <button id="mode-light" onclick="setAppearanceMode('light')" class="btn seg">
+                            <span class="ms ms-20 seg-check">check</span><span class="ms ms-20 seg-icon">light_mode</span><span class="bi" data-zh="浅色">Claro</span>
+                        </button>
+                        <button id="mode-dark" onclick="setAppearanceMode('dark')" class="btn seg">
+                            <span class="ms ms-20 seg-check">check</span><span class="ms ms-20 seg-icon">dark_mode</span><span class="bi" data-zh="深色">Oscuro</span>
+                        </button>
+                        <button id="mode-system" onclick="setAppearanceMode('system')" class="btn seg">
+                            <span class="ms ms-20 seg-check">check</span><span class="ms ms-20 seg-icon">brightness_auto</span><span class="bi" data-zh="跟随系统">Seguir sistema</span>
+                        </button>
+                    </div>
+                </div>
+
+                <label class="card-inset switch-row">
+                    <span class="stack-4">
+                        <span class="title-m bi start" data-zh="高对比度">Alto contraste para luz intensa</span>
+                        <span class="body-m muted">Bordes en teclas y departamentos, etiquetas más oscuras e importes en negrita.</span>
+                    </span>
+                    <input id="chk-high-contrast" type="checkbox" onchange="setHighContrast(this.checked)">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR OCULTO PARA IMPRIMIR TICKETS 80 MM CON WINDOW.PRINT() -->
+    <div id="thermal-print-area" class="hidden"></div>
+
+    <!-- ==========================================================
+         LÓGICA DE LA APLICACIÓN
+         ========================================================== -->
+    <script>
+        const THEME_META = [{"id": "grafito", "name": "Grafito Casio", "concept": "Carcasa de calculadora: neutro, técnico y discreto. Recomendado.", "seed": "#526070", "swatches": ["#545F6D", "#E0E2E8", "#E3E2E4", "#DEE6CA", "#1A6C31"]}, {"id": "azul", "name": "Azul Tinta", "concept": "Banca y medios de pago: institucional y fiable.", "seed": "#225292", "swatches": ["#395F97", "#DDE2F2", "#E3E2E6", "#DEE6CA", "#1A6C31"]}, {"id": "pino", "name": "Verde Pino", "concept": "Dinero y calma. Ojo: primary y Cobrar se parecen.", "seed": "#306854", "swatches": ["#356854", "#D8E6DD", "#E1E3E0", "#DEE6CA", "#1A6C31"]}, {"id": "lcd", "name": "LCD Retro", "concept": "Pantalla LCD de la Casio: retro y cálido.", "seed": "#8E9B77", "swatches": ["#556340", "#E0E5D1", "#E3E3DA", "#DEE6CA", "#1A6C31"]}];
+
+        // --- DEFAULT CONFIGURATION & SPANISH RETAIL DATA ---
+        const DEFAULT_SHOP_CONFIG = {
+            name: "Bazar & Multiprecio Central",
+            nif: "B-65432198",
+            address: "C/ Mayor 42, Barcelona • Tel: 930 123 456"
+        };
+
+        const DEFAULT_PRINTER_CONFIG = {
+            mode: 'browser',       // 'browser' | 'bluetooth' | 'rawbt'
+            paperWidth: '80mm',    // '80mm' | '58mm'
+            autoPrint: false,      // Automatically print on "CONFIRMAR VENTA"
+            openDrawer: true,      // Send ESC/POS pulse to RJ11 cash drawer
+            autoCut: true,         // Send GS V cut command
+            footerText: "¡Gracias por su visita! Conserve su ticket."
+        };
+
+        // Marca de color de departamento: se mantienen las 9 claves guardadas,
+        // pero ahora se pintan como una marca de 4 px con tonos apagados.
+        const DEPT_COLORS = {
+            emerald: 'Verde',
+            sky: 'Azul cielo',
+            amber: 'Ocre',
+            orange: 'Teja',
+            purple: 'Violeta',
+            cyan: 'Petróleo',
+            indigo: 'Índigo',
+            pink: 'Malva',
+            slate: 'Gris'
+        };
+
+        // Iconos guardados (Phosphor) → Material Symbols
+        const ICON_MAP = {
+            'ph-bread': 'bakery_dining',
+            'ph-Pint-glass': 'local_drink',
+            'ph-pint-glass': 'local_drink',
+            'ph-house-line': 'home',
+            'ph-wrench': 'build',
+            'ph-pencil-ruler': 'design_services',
+            'ph-sparkle': 'cleaning_services',
+            'ph-plug-charging': 'electrical_services',
+            'ph-gift': 'redeem',
+            'ph-tag': 'sell'
+        };
+        function iconFor(name) {
+            if (!name) return 'sell';
+            if (ICON_MAP[name]) return ICON_MAP[name];
+            return /^[a-z_]+$/.test(name) ? name : 'sell';
+        }
+
+        const DEFAULT_DEPARTMENTS = [
+            { id: 'd1', name: 'Alimentación Básica', tax: 4,  color: 'emerald', icon: 'ph-bread', zh: '基本食品' },
+            { id: 'd2', name: 'Bebidas / Snacks',    tax: 10, color: 'sky',     icon: 'ph-Pint-glass', zh: '饮料零食' },
+            { id: 'd3', name: 'Bazar / Hogar',       tax: 21, color: 'amber',   icon: 'ph-house-line', zh: '百货家居' },
+            { id: 'd4', name: 'Ferretería / Bricolaje', tax: 21, color: 'orange', icon: 'ph-wrench', zh: '五金工具' },
+            { id: 'd5', name: 'Papelería / Cole',    tax: 21, color: 'purple',  icon: 'ph-pencil-ruler', zh: '文具用品' },
+            { id: 'd6', name: 'Limpieza / Droguería',tax: 21, color: 'cyan',    icon: 'ph-sparkle', zh: '清洁日化' },
+            { id: 'd7', name: 'Electrónica / Cables',tax: 21, color: 'indigo',  icon: 'ph-plug-charging', zh: '电子电线' },
+            { id: 'd8', name: 'Textil / Regalos',    tax: 21, color: 'pink',    icon: 'ph-gift', zh: '纺织礼品' },
+            { id: 'd9', name: 'Varios / General',    tax: 21, color: 'slate',   icon: 'ph-tag', zh: '杂项其他' }
+        ];
+
+        const DEFAULT_PRESETS = [
+            { id: 'p1', name: 'Bolsa Plástico', price: 0.15, tax: 21, zh: '塑料袋' },
+            { id: 'p2', name: 'Agua Mineral 50cl', price: 1.00, tax: 10, zh: '矿泉水' },
+            { id: 'p3', name: 'Refresco Lata', price: 1.50, tax: 10, zh: '罐装汽水' },
+            { id: 'p4', name: 'Café / Snack', price: 1.20, tax: 10, zh: '咖啡小吃' },
+            { id: 'p5', name: 'Pilas AA/AAA (4u)', price: 3.50, tax: 21, zh: '电池' },
+            { id: 'p6', name: 'Artículo Promo', price: 5.00, tax: 21, zh: '促销商品' }
+        ];
+
+        // --- APPLICATION STATE ---
+        let shopConfig = {};
+        let printerConfig = {};
+        let departments = [];
+        let quickPresets = [];
+        let completedSales = [];
+        let heldTickets = [];
+        let ticketSequence = 1;
+
+        // Web Bluetooth ESC/POS Runtime Handle
+        let btDevice = null;
+        let btCharacteristic = null;
+
+        // Current Active Ticket State
+        let currentCart = [];
+        let currentDiscount = null; // { type: 'percent' | 'fixed', value: number }
+
+        // Keypad State (Price FIRST -> then optional × Quantity)
+        let keypadBuffer = "";
+        let lockedUnitPrice = null;
+        let isEnteringQty = false;
+        let currentMultiplier = 1;
+        let centsMode = false; // If true, typing "450" = 4.50 €
+        let soundEnabled = true;
+
+        // Checkout Modal State
+        let activePaymentMethod = 'cash'; // 'cash' | 'card' | 'mixed'
+        let audioCtx = null;
+
+        // Apariencia (tema M3)
+        let appearance = { theme: 'grafito', mode: 'light', highContrast: false };
+        let taxBreakdownOpen = false;
+
+        // Idioma secundario: null = solo español (por defecto) | 'zh' = español + chino simplificado
+        let secondaryLang = null;
+
+        // --- WEB AUDIO TACTILE BEEP SYNTHESIZER ---
+        function playBeep(freq = 880, duration = 0.035, type = 'sine') {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) audioCtx = new AudioContext();
+                }
+                if (!audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                // Ignore audio context restrictions if not yet interacted
+            }
+        }
+
+        // Vibración corta en teclas (si el dispositivo la admite)
+        function haptic(ms = 8) {
+            try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* sin vibración */ }
+        }
+
+        // --- FORMATTING HELPERS ---
+        function formatEuro(amount) {
+            const num = Number(amount) || 0;
+            return num.toLocaleString('es-ES', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }) + ' €';
+        }
+
+        function formatTicketNumber(seq) {
+            return '#T-' + String(seq).padStart(4, '0');
+        }
+
+        // --- LOCAL STORAGE PERSISTENCE ---
+        function loadStateFromStorage() {
+            try {
+                const savedShop = localStorage.getItem('qtpos_shop_config');
+                shopConfig = savedShop ? JSON.parse(savedShop) : { ...DEFAULT_SHOP_CONFIG };
+
+                const savedPrinter = localStorage.getItem('qtpos_printer_config');
+                printerConfig = savedPrinter ? { ...DEFAULT_PRINTER_CONFIG, ...JSON.parse(savedPrinter) } : { ...DEFAULT_PRINTER_CONFIG };
+
+                const savedDepts = localStorage.getItem('qtpos_departments');
+                departments = savedDepts ? JSON.parse(savedDepts) : JSON.parse(JSON.stringify(DEFAULT_DEPARTMENTS));
+
+                const savedPresets = localStorage.getItem('qtpos_presets');
+                quickPresets = savedPresets ? JSON.parse(savedPresets) : JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+
+                const savedSales = localStorage.getItem('qtpos_completed_sales');
+                completedSales = savedSales ? JSON.parse(savedSales) : [];
+
+                const savedHeld = localStorage.getItem('qtpos_held_tickets');
+                heldTickets = savedHeld ? JSON.parse(savedHeld) : [];
+
+                const savedSeq = localStorage.getItem('qtpos_ticket_seq');
+                ticketSequence = savedSeq ? parseInt(savedSeq, 10) : 1;
+
+                const savedCents = localStorage.getItem('qtpos_cents_mode');
+                centsMode = savedCents === 'true';
+
+                const savedAppearance = localStorage.getItem('qtpos_appearance');
+                if (savedAppearance) appearance = { ...appearance, ...JSON.parse(savedAppearance) };
+
+                taxBreakdownOpen = localStorage.getItem('qtpos_tax_open') === 'true';
+                secondaryLang = localStorage.getItem('qtpos_lang2') === 'zh' ? 'zh' : null;
+            } catch (err) {
+                shopConfig = { ...DEFAULT_SHOP_CONFIG };
+                printerConfig = { ...DEFAULT_PRINTER_CONFIG };
+                departments = JSON.parse(JSON.stringify(DEFAULT_DEPARTMENTS));
+                quickPresets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+                completedSales = [];
+                heldTickets = [];
+                ticketSequence = 1;
+            }
+        }
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem('qtpos_shop_config', JSON.stringify(shopConfig));
+                localStorage.setItem('qtpos_printer_config', JSON.stringify(printerConfig));
+                localStorage.setItem('qtpos_departments', JSON.stringify(departments));
+                localStorage.setItem('qtpos_presets', JSON.stringify(quickPresets));
+                localStorage.setItem('qtpos_completed_sales', JSON.stringify(completedSales));
+                localStorage.setItem('qtpos_held_tickets', JSON.stringify(heldTickets));
+                localStorage.setItem('qtpos_ticket_seq', String(ticketSequence));
+            } catch (err) {
+                console.error('Error guardando estado en localStorage:', err);
+            }
+        }
+
+        function safeSetItem(key, value) {
+            try { localStorage.setItem(key, value); } catch (e) { /* almacenamiento no disponible */ }
+        }
+
+        function updateLiveClock() {
+            const now = new Date();
+            const clockEl = document.getElementById('live-clock');
+            if (clockEl) {
+                clockEl.textContent = now.toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            }
+        }
+
+        // --- APARIENCIA: TEMAS MATERIAL 3 ---
+        function resolveMode(mode) {
+            if (mode === 'system') {
+                return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+            return mode === 'dark' ? 'dark' : 'light';
+        }
+
+        function applyAppearance() {
+            const root = document.documentElement;
+            root.dataset.theme = THEME_META.some(t => t.id === appearance.theme) ? appearance.theme : 'grafito';
+            root.dataset.mode = resolveMode(appearance.mode);
+            root.dataset.contrast = appearance.highContrast ? 'high' : 'normal';
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) {
+                const c = getComputedStyle(root).getPropertyValue('--md-surface-container').trim();
+                if (c) meta.setAttribute('content', c);
+            }
+        }
+
+        function saveAppearance() {
+            safeSetItem('qtpos_appearance', JSON.stringify(appearance));
+        }
+
+        function renderAppearance() {
+            const cards = document.getElementById('theme-cards');
+            cards.innerHTML = THEME_META.map(t => `
+                <button type="button" class="btn select-card ${t.id === appearance.theme ? 'is-selected' : ''}" onclick="setAppearanceTheme('${t.id}')" aria-pressed="${t.id === appearance.theme}">
+                    <span class="row between">
+                        <span class="title-m">${t.name}</span>
+                        <span class="ms sel-check">check_circle</span>
+                    </span>
+                    <span class="swatches">${t.swatches.map(c => `<span style="background:${c}"></span>`).join('')}</span>
+                    <span class="body-m muted">${t.concept}</span>
+                    <span class="label-m muted num">Semilla ${t.seed}</span>
+                </button>
+            `).join('');
+            ['light', 'dark', 'system'].forEach(m => {
+                const btn = document.getElementById(`mode-${m}`);
+                const sel = appearance.mode === m;
+                btn.classList.toggle('is-selected', sel);
+                btn.setAttribute('aria-pressed', sel);
+            });
+            document.getElementById('chk-high-contrast').checked = !!appearance.highContrast;
+        }
+
+        function setAppearanceTheme(id) {
+            appearance.theme = id;
+            applyAppearance();
+            saveAppearance();
+            renderAppearance();
+        }
+
+        function setAppearanceMode(mode) {
+            appearance.mode = mode;
+            applyAppearance();
+            saveAppearance();
+            renderAppearance();
+        }
+
+        function setHighContrast(on) {
+            appearance.highContrast = !!on;
+            applyAppearance();
+            saveAppearance();
+        }
+
+        function openAppearanceModal() {
+            renderAppearance();
+            document.getElementById('appearance-modal').classList.remove('hidden');
+            document.getElementById('appearance-modal').classList.add('flex');
+        }
+
+        function closeAppearanceModal() {
+            document.getElementById('appearance-modal').classList.add('hidden');
+            document.getElementById('appearance-modal').classList.remove('flex');
+        }
+
+        // --- IDIOMA SECUNDARIO (CHINO) ---
+        // Texto bilingüe: chino encima, español debajo. El chino solo se ve si está activado.
+        function bi(es, zh, cls = '') {
+            if (!zh) return es;
+            return `<span class="bi ${cls}"><span class="zh" lang="zh-Hans">${zh}</span><span>${es}</span></span>`;
+        }
+
+        // Convierte las etiquetas fijas con data-zh en bloques bilingües
+        function initBilingual() {
+            document.querySelectorAll('[data-zh]').forEach(el => {
+                const zh = el.getAttribute('data-zh');
+                el.removeAttribute('data-zh');
+                el.classList.add('bi');
+                el.innerHTML = `<span class="zh" lang="zh-Hans">${zh}</span><span>${el.innerHTML}</span>`;
+            });
+        }
+
+        // Fuente china solo se descarga si se activa el idioma
+        function ensureZhFont() {
+            if (document.getElementById('zh-font-link')) return;
+            const link = document.createElement('link');
+            link.id = 'zh-font-link';
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700&display=swap';
+            document.head.appendChild(link);
+        }
+
+        function updateLangControls() {
+            const none = document.getElementById('lang2-none');
+            const zh = document.getElementById('lang2-zh');
+            if (!none || !zh) return;
+            none.classList.toggle('is-selected', !secondaryLang);
+            none.setAttribute('aria-pressed', !secondaryLang);
+            zh.classList.toggle('is-selected', secondaryLang === 'zh');
+            zh.setAttribute('aria-pressed', secondaryLang === 'zh');
+        }
+
+        function applyLang() {
+            document.documentElement.dataset.lang2 = secondaryLang === 'zh' ? 'zh' : 'none';
+            if (secondaryLang === 'zh') ensureZhFont();
+            const note = document.getElementById('custom-item-note');
+            if (note) note.placeholder = secondaryLang === 'zh' ? 'Nota opcional · 备注' : 'Nota opcional (ej. Tornillos)';
+            updateLangControls();
+        }
+
+        function setSecondaryLang(lang) {
+            secondaryLang = lang === 'zh' ? 'zh' : null;
+            safeSetItem('qtpos_lang2', secondaryLang || '');
+            applyLang();
+            updateKeypadDisplay();
+            updateCentsModeUI();
+            showToast(secondaryLang ? 'Traducción al chino activada' : 'Solo español', 'info', secondaryLang ? '已开启中文' : '');
+        }
+
+        // Nombre en chino de un departamento o artículo (los de fábrica ya traen traducción)
+        function deptZh(d) {
+            if (typeof d.zh === 'string') return d.zh;
+            const def = DEFAULT_DEPARTMENTS.find(x => x.id === d.id);
+            return def && def.name === d.name ? def.zh : '';
+        }
+        function presetZh(p) {
+            if (typeof p.zh === 'string') return p.zh;
+            const def = DEFAULT_PRESETS.find(x => x.id === p.id);
+            return def && def.name === p.name ? def.zh : '';
+        }
+
+        // --- APP INSTALABLE (PWA) ---
+        let deferredInstallPrompt = null;
+
+        function isStandalone() {
+            return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        }
+
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
+        function updateInstallUI() {
+            const status = document.getElementById('install-status');
+            const btn = document.getElementById('install-btn');
+            if (!status || !btn) return;
+            btn.classList.add('hidden');
+            if (isStandalone()) {
+                status.innerHTML = `${bi('Ya está instalada en este dispositivo.', '已安装', 'start')}`;
+            } else if (deferredInstallPrompt) {
+                status.textContent = 'Añade QuickTap a la pantalla de inicio para abrirla como una app y usarla sin conexión.';
+                btn.classList.remove('hidden');
+            } else if (isIOS()) {
+                status.innerHTML = 'En Safari, toca <strong>Compartir</strong> <span class="ms ms-18" style="vertical-align:-3px">ios_share</span> y después <strong>Añadir a pantalla de inicio</strong>.';
+            } else if (location.protocol === 'file:') {
+                status.textContent = 'Abre la app desde su dirección web (GitHub Pages) para poder instalarla.';
+            } else {
+                status.textContent = 'Usa el menú del navegador: «Instalar aplicación» o «Añadir a pantalla de inicio».';
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            updateInstallUI();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            updateInstallUI();
+            showToast('QuickTap instalada en este dispositivo', 'success', '已安装到本机');
+        });
+
+        async function installApp() {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            try { await deferredInstallPrompt.userChoice; } catch (e) { /* cancelado */ }
+            deferredInstallPrompt = null;
+            updateInstallUI();
+        }
+
+        // Funciona sin conexión y pide al navegador que no borre los datos guardados
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service worker no registrado:', err));
+            }
+            try {
+                if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+            } catch (e) { /* no disponible */ }
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = function () {
+            loadStateFromStorage();
+            initBilingual();
+            applyLang();
+            applyAppearance();
+            if (window.matchMedia) {
+                const mq = matchMedia('(prefers-color-scheme: dark)');
+                const onChange = () => { if (appearance.mode === 'system') applyAppearance(); };
+                if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
+            }
+            applyPaperWidthCSS();
+            updateNavPrinterBadge();
+            renderShopHeader();
+            updateCentsModeUI();
+            applyTaxBreakdownState();
+            renderQuickPresets();
+            renderDepartments();
+            renderReceipt();
+            updateHeldBadge();
+            updateTopSalesPill();
+            updateKeypadDisplay();
+            updateLiveClock();
+            setInterval(updateLiveClock, 1000);
+            window.addEventListener('keydown', handlePhysicalKeyboard);
+            registerServiceWorker();
+        };
+
+        // --- KEYPAD LOGIC (PRICE FIRST -> MULTIPLY QUANTITY SECOND) ---
+        function getBufferAsPrice() {
+            if (!keypadBuffer || keypadBuffer === ".") return 0;
+            if (centsMode) {
+                const digitsOnly = keypadBuffer.replace(/\D/g, '');
+                if (!digitsOnly) return 0;
+                return parseInt(digitsOnly, 10) / 100;
+            } else {
+                const val = parseFloat(keypadBuffer);
+                return isNaN(val) ? 0 : val;
+            }
+        }
+
+        function getParsedKeypadPrice() {
+            if (isEnteringQty && lockedUnitPrice !== null) {
+                return lockedUnitPrice;
+            }
+            return getBufferAsPrice();
+        }
+
+        function getEffectiveQuantity() {
+            if (isEnteringQty) {
+                const typedQty = parseInt(keypadBuffer, 10);
+                if (!isNaN(typedQty) && typedQty >= 1) {
+                    return typedQty;
+                }
+            }
+            return currentMultiplier;
+        }
+
+        // Muestra el importe con coma decimal (convención española)
+        function toDisplayDecimal(str) {
+            return String(str).replace('.', ',');
+        }
+
+        function updateKeypadDisplay() {
+            const displayEl = document.getElementById('keypad-value-display');
+            const unitSymbolEl = document.getElementById('keypad-unit-symbol');
+            const formulaEl = document.getElementById('locked-price-formula');
+            const qtyBadge = document.getElementById('qty-badge');
+            const qtyBadgeText = document.getElementById('active-qty-text');
+            const resetQtyBtn = document.getElementById('reset-qty-btn');
+            const lcdBox = document.getElementById('keypad-display-box');
+            const hintEl = document.getElementById('keypad-helper-hint');
+
+            const unitPrice = getParsedKeypadPrice();
+            const effectiveQty = getEffectiveQuantity();
+
+            if (isEnteringQty) {
+                lcdBox.classList.add('lcd--qty');
+                const qtyDisplay = keypadBuffer !== "" ? keypadBuffer : String(currentMultiplier);
+                displayEl.textContent = `× ${qtyDisplay}`;
+                unitSymbolEl.textContent = "uds";
+
+                const linePreview = unitPrice * effectiveQty;
+                formulaEl.classList.remove('hidden');
+                formulaEl.textContent = `${formatEuro(unitPrice)} × ${effectiveQty} = ${formatEuro(linePreview)}`;
+                hintEl.innerHTML = `<span class="zh" lang="zh-Hans">输入数量 → 点商品分类</span><span>Escribe la <strong>cantidad</strong> y toca un <strong>departamento</strong></span>`;
+            } else {
+                lcdBox.classList.remove('lcd--qty');
+                unitSymbolEl.textContent = "€";
+
+                if (centsMode) {
+                    displayEl.textContent = toDisplayDecimal(unitPrice.toFixed(2));
+                } else {
+                    displayEl.textContent = keypadBuffer === "" ? "0,00" : toDisplayDecimal(keypadBuffer);
+                }
+
+                if (currentMultiplier > 1 && unitPrice > 0) {
+                    const linePreview = unitPrice * currentMultiplier;
+                    formulaEl.classList.remove('hidden');
+                    formulaEl.textContent = `${formatEuro(unitPrice)} × ${currentMultiplier} uds = ${formatEuro(linePreview)}`;
+                } else {
+                    formulaEl.classList.add('hidden');
+                }
+                hintEl.innerHTML = `<span class="zh" lang="zh-Hans">价格 → ×数量 → 分类</span><span>Precio → <strong>× Cant.</strong> → <strong>Departamento</strong></span>`;
+            }
+
+            qtyBadgeText.innerHTML = `<span class="zh inline" lang="zh-Hans">数量</span> Cant ×${effectiveQty}`;
+            const qtyActive = effectiveQty > 1 || isEnteringQty;
+            qtyBadge.classList.toggle('hidden', !qtyActive);
+            resetQtyBtn.classList.toggle('hidden', !qtyActive);
+        }
+
+        // Marca la pantalla en error (borde rojo + sacudida + vibración doble)
+        function flashLcdError() {
+            const lcd = document.getElementById('keypad-display-box');
+            lcd.classList.remove('animate-shake');
+            void lcd.offsetWidth; // trigger reflow
+            lcd.classList.add('animate-shake', 'lcd--error');
+            haptic([30, 60, 30]);
+            setTimeout(() => lcd.classList.remove('lcd--error'), 900);
+        }
+
+        function pressDigit(digit) {
+            playBeep(920, 0.03);
+            haptic();
+
+            // If we are in "Multiply Quantity" step after locking the price, only accept whole numbers (1-999)
+            if (isEnteringQty) {
+                const nextQty = (keypadBuffer + digit).replace(/^0+/, '');
+                if (nextQty.length > 3) return;
+                keypadBuffer = nextQty;
+                const parsed = parseInt(keypadBuffer, 10);
+                if (!isNaN(parsed) && parsed >= 1) {
+                    currentMultiplier = parsed;
+                }
+                updateKeypadDisplay();
+                return;
+            }
+
+            if (centsMode) {
+                const next = (keypadBuffer + digit).replace(/^0+/, '');
+                if (next.length > 7) return;
+                keypadBuffer = next;
+            } else {
+                if (keypadBuffer.includes('.')) {
+                    const parts = keypadBuffer.split('.');
+                    if (parts[1] && parts[1].length >= 2) return; // Max 2 decimal places
+                }
+                if (keypadBuffer === "0" && digit !== ".") {
+                    keypadBuffer = digit;
+                } else if (keypadBuffer === "" && digit === "00") {
+                    keypadBuffer = "0";
+                } else {
+                    if (keypadBuffer.length < 8) {
+                        keypadBuffer += digit;
+                    }
+                }
+            }
+            updateKeypadDisplay();
+        }
+
+        function pressDecimal() {
+            playBeep(780, 0.03);
+            haptic();
+            if (isEnteringQty) {
+                showToast("La cantidad a multiplicar debe ser un número entero", "amber", "数量必须是整数");
+                return;
+            }
+            if (centsMode) {
+                showToast("En modo céntimos no hace falta la coma (ej. 450 = 4,50 €)", "info", "按分输入时不用按小数点（例：450 = 4,50 €）");
+                return;
+            }
+            if (!keypadBuffer.includes('.')) {
+                keypadBuffer = keypadBuffer === "" ? "0." : keypadBuffer + ".";
+                updateKeypadDisplay();
+            }
+        }
+
+        function pressBackspace() {
+            playBeep(620, 0.03);
+            haptic();
+            if (keypadBuffer.length > 0) {
+                keypadBuffer = keypadBuffer.slice(0, -1);
+                if (isEnteringQty) {
+                    const parsed = parseInt(keypadBuffer, 10);
+                    currentMultiplier = (!isNaN(parsed) && parsed >= 1) ? parsed : 1;
+                }
+                updateKeypadDisplay();
+            } else if (isEnteringQty) {
+                // Pressing Backspace when quantity buffer is empty returns to editing the unit price
+                resetMultiplier();
+            }
+        }
+
+        function pressClear() {
+            playBeep(440, 0.06, 'triangle');
+            haptic(15);
+            keypadBuffer = "";
+            lockedUnitPrice = null;
+            isEnteringQty = false;
+            currentMultiplier = 1;
+            document.getElementById('custom-item-note').value = "";
+            updateKeypadDisplay();
+        }
+
+        function pressQtyMultiplier() {
+            playBeep(1100, 0.05);
+            haptic();
+            const currentPrice = getParsedKeypadPrice();
+
+            if (currentPrice <= 0) {
+                // If no price typed yet, remind user that Price goes first
+                playBeep(260, 0.12, 'sawtooth');
+                flashLcdError();
+                showToast("Escribe primero el precio y luego pulsa × Cant. para multiplicar", "amber", "请先输入价格，再按 ×数量");
+                return;
+            }
+
+            // Lock the unit price and switch keypad to receive the quantity multiplier
+            lockedUnitPrice = currentPrice;
+            isEnteringQty = true;
+            keypadBuffer = ""; // Ready to type quantity (e.g. 3, 4, 12...)
+            updateKeypadDisplay();
+            showToast(`Precio fijado (${formatEuro(lockedUnitPrice)}). Escribe la cantidad y toca el departamento.`, 'amber', `价格已定（${formatEuro(lockedUnitPrice)}）。请输入数量，再点商品分类`);
+        }
+
+        function setQuickMultiplier(qty) {
+            playBeep(1050, 0.04);
+            haptic();
+            const currentPrice = getParsedKeypadPrice();
+            if (currentPrice > 0 && !isEnteringQty) {
+                // Lock current price and apply the quick multiplier
+                lockedUnitPrice = currentPrice;
+                isEnteringQty = true;
+                keypadBuffer = String(qty);
+                currentMultiplier = qty;
+            } else if (isEnteringQty) {
+                keypadBuffer = String(qty);
+                currentMultiplier = qty;
+            } else {
+                // Also allow tapping ×2 before tapping a 1-Tap Quick Preset item
+                currentMultiplier = qty;
+            }
+            updateKeypadDisplay();
+        }
+
+        function resetMultiplier() {
+            playBeep(700, 0.03);
+            if (isEnteringQty && lockedUnitPrice !== null) {
+                // Restore locked unit price back into price buffer
+                if (centsMode) {
+                    keypadBuffer = String(Math.round(lockedUnitPrice * 100));
+                } else {
+                    keypadBuffer = String(lockedUnitPrice);
+                }
+            }
+            lockedUnitPrice = null;
+            isEnteringQty = false;
+            currentMultiplier = 1;
+            updateKeypadDisplay();
+        }
+
+        function toggleCentsMode() {
+            centsMode = !centsMode;
+            safeSetItem('qtpos_cents_mode', centsMode.toString());
+            keypadBuffer = "";
+            lockedUnitPrice = null;
+            isEnteringQty = false;
+            currentMultiplier = 1;
+            updateCentsModeUI();
+            updateKeypadDisplay();
+            showToast(centsMode ? "Modo céntimos activado (450 → 4,50 €)" : "Modo decimal estándar activado", "info", centsMode ? "已开启按分输入（450 → 4,50 €）" : "已改为普通小数输入");
+        }
+
+        function updateCentsModeUI() {
+            const btn = document.getElementById('cents-mode-btn');
+            const statusEl = document.getElementById('cents-mode-status');
+            const iconEl = document.getElementById('cents-mode-icon');
+            const modeLabel = document.getElementById('entry-mode-label');
+            btn.classList.toggle('is-selected', centsMode);
+            btn.setAttribute('aria-pressed', centsMode);
+            iconEl.classList.toggle('hidden', !centsMode);
+            statusEl.textContent = centsMode ? "ON" : "OFF";
+            // Indicador del LCD: solo visible cuando está activo
+            modeLabel.innerHTML = `<span class="zh inline" lang="zh-Hans">按分</span> Cént. 00`;
+            modeLabel.classList.toggle('hidden', !centsMode);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            icon.textContent = soundEnabled ? 'volume_up' : 'volume_off';
+            document.getElementById('sound-toggle-btn').setAttribute('aria-pressed', soundEnabled);
+        }
+
+        // --- RIGHT PANEL RENDERING & ITEM ADDITION ---
+        function renderQuickPresets() {
+            const container = document.getElementById('quick-presets-grid');
+            container.innerHTML = quickPresets.map(p => `
+                <button onclick="tapQuickPreset('${p.id}')" class="btn tile tile--preset" aria-label="${escapeHtml(p.name)}, ${formatEuro(Number(p.price))}">
+                    <span class="preset-names">
+                        ${presetZh(p) ? `<span class="zh truncate" lang="zh-Hans">${escapeHtml(presetZh(p))}</span>` : ''}
+                        <span class="label-l truncate">${escapeHtml(p.name)}</span>
+                    </span>
+                    <span class="tile-row">
+                        <span class="title-m num">${formatEuro(Number(p.price))}</span>
+                        <span class="tag num">${p.tax} %</span>
+                    </span>
+                </button>
+            `).join('');
+        }
+
+        function renderDepartments() {
+            const container = document.getElementById('departments-grid');
+            container.innerHTML = departments.map(d => {
+                const color = DEPT_COLORS[d.color] ? d.color : 'slate';
+                return `
+                    <button onclick="tapDepartment('${d.id}')" class="btn tile tile--dept" style="--marker: var(--dept-${color})" aria-label="${escapeHtml(d.name)}, IVA ${d.tax} %">
+                        <span class="tile-row">
+                            <span class="ms tile-icon">${iconFor(d.icon)}</span>
+                            <span class="tag num"><span class="iva-prefix">IVA</span> ${d.tax} %</span>
+                        </span>
+                        <span class="dept-names">
+                            ${deptZh(d) ? `<span class="zh truncate" lang="zh-Hans">${escapeHtml(deptZh(d))}</span>` : ''}
+                            <span class="title-m clamp-2 dept-name">${escapeHtml(d.name)}</span>
+                        </span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function tapQuickPreset(presetId) {
+            const preset = quickPresets.find(p => p.id === presetId);
+            if (!preset) return;
+            playBeep(1200, 0.05);
+            haptic();
+
+            const customNote = document.getElementById('custom-item-note').value.trim();
+            const label = customNote ? `${preset.name} (${customNote})` : preset.name;
+            const zhBase = presetZh(preset);
+            const labelZh = zhBase ? (customNote ? `${zhBase}（${customNote}）` : zhBase) : '';
+            const qty = getEffectiveQuantity();
+
+            addItemToTicket({
+                name: label,
+                nameZh: labelZh,
+                unitPrice: Number(preset.price),
+                qty: qty,
+                taxRate: Number(preset.tax),
+                deptId: preset.id,
+                isPreset: true
+            });
+
+            // Reset multiplier and note
+            currentMultiplier = 1;
+            lockedUnitPrice = null;
+            isEnteringQty = false;
+            keypadBuffer = "";
+            document.getElementById('custom-item-note').value = "";
+            updateKeypadDisplay();
+        }
+
+        function tapDepartment(deptId) {
+            const dept = departments.find(d => d.id === deptId);
+            if (!dept) return;
+
+            const price = getParsedKeypadPrice();
+            if (price <= 0) {
+                playBeep(260, 0.12, 'sawtooth');
+                flashLcdError();
+                showToast(`Marca primero un precio en el teclado para "${dept.name}"`, 'error', `请先在键盘上输入价格${deptZh(dept) ? '（' + deptZh(dept) + '）' : ''}`);
+                return;
+            }
+
+            playBeep(1320, 0.05);
+            haptic();
+            const customNote = document.getElementById('custom-item-note').value.trim();
+            const itemName = customNote ? `${dept.name} — ${customNote}` : dept.name;
+            const zhBase = deptZh(dept);
+            const itemNameZh = zhBase ? (customNote ? `${zhBase} — ${customNote}` : zhBase) : '';
+            const qty = getEffectiveQuantity();
+
+            addItemToTicket({
+                name: itemName,
+                nameZh: itemNameZh,
+                unitPrice: price,
+                qty: qty,
+                taxRate: Number(dept.tax),
+                deptId: dept.id,
+                color: dept.color
+            });
+
+            // Reset keypad, locked price & multiplier immediately for the next item
+            keypadBuffer = "";
+            lockedUnitPrice = null;
+            isEnteringQty = false;
+            currentMultiplier = 1;
+            document.getElementById('custom-item-note').value = "";
+            updateKeypadDisplay();
+        }
+
+        function addItemToTicket(itemData) {
+            // Merge if identical name, unitPrice, and taxRate exist
+            const existingIndex = currentCart.findIndex(item =>
+                item.name === itemData.name &&
+                Math.abs(item.unitPrice - itemData.unitPrice) < 0.001 &&
+                item.taxRate === itemData.taxRate
+            );
+
+            if (existingIndex > -1) {
+                currentCart[existingIndex].qty += itemData.qty;
+                currentCart[existingIndex].lastUpdated = Date.now();
+            } else {
+                currentCart.push({
+                    uid: 'line_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                    name: itemData.name,
+                    nameZh: itemData.nameZh || '',
+                    unitPrice: itemData.unitPrice,
+                    qty: itemData.qty,
+                    taxRate: itemData.taxRate,
+                    deptId: itemData.deptId,
+                    lastUpdated: Date.now()
+                });
+            }
+
+            renderReceipt(true);
+        }
+
+        // --- RECEIPT CALCULATIONS & RENDERING ---
+        function calculateTicketTotals(cart = currentCart, discount = currentDiscount) {
+            const rawSubtotal = cart.reduce((sum, i) => sum + (i.unitPrice * i.qty), 0);
+
+            let discountAmount = 0;
+            if (discount && rawSubtotal > 0) {
+                if (discount.type === 'percent') {
+                    discountAmount = rawSubtotal * (discount.value / 100);
+                } else if (discount.type === 'fixed') {
+                    discountAmount = Math.min(rawSubtotal, discount.value);
+                }
+            }
+
+            const discountFactor = rawSubtotal > 0 ? (rawSubtotal - discountAmount) / rawSubtotal : 1;
+
+            // Group by Spanish IVA brackets (4%, 10%, 21%, 0%)
+            const brackets = {
+                4:  { rate: 4,  base: 0, quota: 0, total: 0 },
+                10: { rate: 10, base: 0, quota: 0, total: 0 },
+                21: { rate: 21, base: 0, quota: 0, total: 0 }
+            };
+
+            cart.forEach(item => {
+                const lineGross = (item.unitPrice * item.qty) * discountFactor;
+                const rate = Number(item.taxRate);
+                if (!brackets[rate]) {
+                    brackets[rate] = { rate, base: 0, quota: 0, total: 0 };
+                }
+                const base = lineGross / (1 + rate / 100);
+                const quota = lineGross - base;
+                brackets[rate].base += base;
+                brackets[rate].quota += quota;
+                brackets[rate].total += lineGross;
+            });
+
+            let totalBase = 0;
+            let totalQuota = 0;
+            let grandTotal = 0;
+
+            Object.values(brackets).forEach(b => {
+                totalBase += b.base;
+                totalQuota += b.quota;
+                grandTotal += b.total;
+            });
+
+            return {
+                rawSubtotal,
+                discountAmount,
+                totalBase,
+                totalQuota,
+                grandTotal,
+                brackets
+            };
+        }
+
+        function renderReceipt(scrollToBottom = false) {
+            document.getElementById('current-ticket-number').textContent = formatTicketNumber(ticketSequence);
+            const totalUnits = currentCart.reduce((acc, i) => acc + i.qty, 0);
+            document.getElementById('ticket-item-count').textContent = `${currentCart.length} líneas (${totalUnits} uds)`;
+
+            const container = document.getElementById('receipt-items-container');
+
+            if (currentCart.length === 0) {
+                container.innerHTML = `
+                    <div id="receipt-empty-state" class="empty">
+                        <span class="ms empty-icon">receipt_long</span>
+                        <p class="zh on-surface" lang="zh-Hans" style="--zh-size:22px">小票是空的</p>
+                        <p class="title-m on-surface">Ticket vacío</p>
+                        <p class="zh" lang="zh-Hans" style="--zh-size:18px;white-space:normal">输入价格，再点商品分类或快捷商品</p>
+                        <p class="body-m">Marca un precio en el teclado y toca un <strong>departamento</strong>, o toca un <strong>artículo rápido</strong>.</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = currentCart.map((item, idx) => {
+                    const lineTotal = item.unitPrice * item.qty;
+                    const isNewest = idx === currentCart.length - 1;
+                    return `
+                        <div class="line ${isNewest ? 'item-flash' : ''}">
+                            <div class="line-name">
+                                ${item.nameZh ? `<span class="zh line-zh" lang="zh-Hans">${escapeHtml(item.nameZh)}</span>` : ''}
+                                <span class="body-l truncate">${escapeHtml(item.name)}</span>
+                                <span class="tag num">${item.taxRate} %</span>
+                            </div>
+                            <div class="line-detail body-m muted num truncate">${item.qty} × ${formatEuro(item.unitPrice)}</div>
+
+                            <div class="qty">
+                                <button onclick="adjustLineQty('${item.uid}', -1)" class="btn icon-btn icon-btn--tonal" aria-label="Quitar una unidad"><span class="ms ms-20">remove</span></button>
+                                <span class="title-m num qty-val">${item.qty}</span>
+                                <button onclick="adjustLineQty('${item.uid}', 1)" class="btn icon-btn icon-btn--tonal" aria-label="Añadir una unidad"><span class="ms ms-20">add</span></button>
+                            </div>
+
+                            <span class="title-m num line-total">${formatEuro(lineTotal)}</span>
+                            <button onclick="removeLineItem('${item.uid}')" class="btn icon-btn icon-btn--danger line-del" aria-label="Eliminar línea"><span class="ms ms-20">delete</span></button>
+                        </div>
+                    `;
+                }).join('');
+
+                if (scrollToBottom) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+
+            // Discount Banner Update
+            const totals = calculateTicketTotals();
+            const discountBar = document.getElementById('active-discount-bar');
+            if (currentDiscount && totals.discountAmount > 0) {
+                discountBar.classList.remove('hidden');
+                const desc = currentDiscount.type === 'percent' ? `Descuento (${currentDiscount.value} %)` : `Descuento fijo`;
+                document.getElementById('discount-label-text').textContent = desc;
+                document.getElementById('discount-amount-text').textContent = `-${formatEuro(totals.discountAmount)}`;
+            } else {
+                discountBar.classList.add('hidden');
+            }
+
+            // Live IVA Breakdown Table
+            const taxContainer = document.getElementById('live-tax-breakdown');
+            const ratesToShow = [4, 10, 21];
+            taxContainer.innerHTML = ratesToShow.map(r => {
+                const b = totals.brackets[r] || { base: 0, quota: 0, total: 0 };
+                return `
+                    <div class="tax-grid tax-row ${b.total > 0 ? 'is-active' : ''}">
+                        <span>IVA ${r} %</span>
+                        <span>${formatEuro(b.base)}</span>
+                        <span>${formatEuro(b.quota)}</span>
+                        <span>${formatEuro(b.total)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Grand Total Readouts
+            document.getElementById('receipt-subtotal-base').textContent =
+                `Base: ${formatEuro(totals.totalBase)} • IVA: ${formatEuro(totals.totalQuota)}`;
+            document.getElementById('receipt-grand-total').textContent = formatEuro(totals.grandTotal);
+            document.getElementById('charge-btn-amount').textContent = formatEuro(totals.grandTotal);
+            document.getElementById('charge-main-btn').setAttribute('aria-disabled', currentCart.length === 0 ? 'true' : 'false');
+        }
+
+        function applyTaxBreakdownState() {
+            document.getElementById('tax-breakdown-box').classList.toggle('hidden', !taxBreakdownOpen);
+            document.getElementById('tax-toggle-icon').textContent = taxBreakdownOpen ? 'expand_less' : 'expand_more';
+            document.getElementById('tax-toggle-btn').setAttribute('aria-expanded', taxBreakdownOpen);
+        }
+
+        function toggleTaxBreakdown() {
+            taxBreakdownOpen = !taxBreakdownOpen;
+            safeSetItem('qtpos_tax_open', String(taxBreakdownOpen));
+            applyTaxBreakdownState();
+        }
+
+        function adjustLineQty(uid, delta) {
+            playBeep(820, 0.03);
+            haptic();
+            const idx = currentCart.findIndex(i => i.uid === uid);
+            if (idx === -1) return;
+            currentCart[idx].qty += delta;
+            if (currentCart[idx].qty <= 0) {
+                currentCart.splice(idx, 1);
+            }
+            renderReceipt();
+        }
+
+        function removeLineItem(uid) {
+            playBeep(500, 0.05);
+            haptic(15);
+            currentCart = currentCart.filter(i => i.uid !== uid);
+            renderReceipt();
+        }
+
+        function clearCurrentTicket() {
+            if (currentCart.length === 0) return;
+            playBeep(380, 0.08, 'triangle');
+            currentCart = [];
+            currentDiscount = null;
+            renderReceipt();
+            showToast("Ticket vaciado", "info", "小票已清空");
+        }
+
+        // --- DISCOUNTS ---
+        function openDiscountModal() {
+            if (currentCart.length === 0) {
+                showToast("Añade artículos antes de aplicar un descuento", "amber", "请先添加商品，再打折");
+                return;
+            }
+            document.getElementById('discount-modal').classList.remove('hidden');
+            document.getElementById('discount-modal').classList.add('flex');
+        }
+
+        function closeDiscountModal() {
+            document.getElementById('discount-modal').classList.add('hidden');
+            document.getElementById('discount-modal').classList.remove('flex');
+        }
+
+        function applyTicketDiscount(type, value) {
+            currentDiscount = { type, value: Number(value) };
+            closeDiscountModal();
+            renderReceipt();
+            showToast("Descuento aplicado al ticket", "info", "折扣已用上");
+        }
+
+        function applyCustomEuroDiscount() {
+            const val = parseFloat(document.getElementById('custom-discount-euro').value);
+            if (isNaN(val) || val <= 0) return;
+            applyTicketDiscount('fixed', val);
+            document.getElementById('custom-discount-euro').value = "";
+        }
+
+        function removeDiscount() {
+            currentDiscount = null;
+            renderReceipt();
+        }
+
+        // --- HOLD / PARK TICKETS ---
+        function holdCurrentTicket() {
+            if (currentCart.length === 0) {
+                showToast("El ticket está vacío", "amber", "小票是空的");
+                return;
+            }
+            playBeep(700, 0.06);
+            const totals = calculateTicketTotals();
+            heldTickets.push({
+                id: 'H-' + Date.now(),
+                timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+                cart: JSON.parse(JSON.stringify(currentCart)),
+                discount: currentDiscount ? { ...currentDiscount } : null,
+                total: totals.grandTotal
+            });
+            currentCart = [];
+            currentDiscount = null;
+            saveStateToStorage();
+            updateHeldBadge();
+            renderReceipt();
+            showToast("Ticket puesto en espera", "amber", "已挂单");
+        }
+
+        function updateHeldBadge() {
+            const badge = document.getElementById('held-count-badge');
+            if (heldTickets.length > 0) {
+                badge.textContent = heldTickets.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function openHeldTicketsModal() {
+            const listEl = document.getElementById('held-tickets-list');
+            if (heldTickets.length === 0) {
+                listEl.innerHTML = `<div class="empty" style="height:auto;padding:32px"><span class="ms empty-icon">inbox</span><p class="zh" lang="zh-Hans">没有挂单</p><p class="body-m">No hay tickets en espera.</p></div>`;
+            } else {
+                listEl.innerHTML = heldTickets.map((h, index) => `
+                    <div class="list-row">
+                        <div class="stack-4" style="gap:2px">
+                            <div class="title-m"><span class="zh inline" lang="zh-Hans">挂单 ${index + 1}</span> Espera ${index + 1} <span class="body-m muted num">· ${h.timestamp}</span></div>
+                            <div class="body-m muted num">${h.cart.length} líneas · Total <strong class="on-surface">${formatEuro(h.total)}</strong></div>
+                        </div>
+                        <div class="row gap-4">
+                            <button onclick="restoreHeldTicket('${h.id}')" class="btn btn-tonal"><span class="ms ms-20">restore</span>${bi('Recuperar', '取单')}</button>
+                            <button onclick="deleteHeldTicket('${h.id}')" class="btn icon-btn icon-btn--danger" aria-label="Eliminar ticket en espera">
+                                <span class="ms ms-20">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('held-tickets-modal').classList.remove('hidden');
+            document.getElementById('held-tickets-modal').classList.add('flex');
+        }
+
+        function closeHeldTicketsModal() {
+            document.getElementById('held-tickets-modal').classList.add('hidden');
+            document.getElementById('held-tickets-modal').classList.remove('flex');
+        }
+
+        function restoreHeldTicket(id) {
+            const idx = heldTickets.findIndex(h => h.id === id);
+            if (idx === -1) return;
+            if (currentCart.length > 0) {
+                holdCurrentTicket();
+            }
+            const restored = heldTickets.splice(idx, 1)[0];
+            currentCart = restored.cart;
+            currentDiscount = restored.discount;
+            saveStateToStorage();
+            updateHeldBadge();
+            renderReceipt();
+            closeHeldTicketsModal();
+            showToast("Ticket recuperado", "info", "已取单");
+        }
+
+        function deleteHeldTicket(id) {
+            heldTickets = heldTickets.filter(h => h.id !== id);
+            saveStateToStorage();
+            updateHeldBadge();
+            openHeldTicketsModal();
+        }
+
+        // --- CHECKOUT & CHANGE CALCULATOR MODAL ---
+        function openCheckoutModal() {
+            if (currentCart.length === 0) {
+                playBeep(260, 0.12, 'sawtooth');
+                showToast("El ticket está vacío. Añade al menos un artículo para cobrar.", "error", "小票是空的，请先添加商品再收款");
+                return;
+            }
+            playBeep(1000, 0.06);
+            const totals = calculateTicketTotals();
+            document.getElementById('checkout-ticket-subtitle').textContent =
+                `${formatTicketNumber(ticketSequence)} • ${currentCart.length} líneas • IVA incluido`;
+            document.getElementById('checkout-total-due').textContent = formatEuro(totals.grandTotal);
+            document.getElementById('exact-cash-btn-label').textContent = formatEuro(totals.grandTotal);
+
+            selectPaymentMethod('cash');
+            document.getElementById('cash-tendered-input').value = totals.grandTotal.toFixed(2);
+            recalculateChange();
+
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            document.getElementById('checkout-modal').classList.add('flex');
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            document.getElementById('checkout-modal').classList.remove('flex');
+        }
+
+        function selectPaymentMethod(method) {
+            activePaymentMethod = method;
+            const methods = ['cash', 'card', 'mixed'];
+            methods.forEach(m => {
+                const btn = document.getElementById(`pay-method-${m}`);
+                const sel = m === method;
+                btn.classList.toggle('is-selected', sel);
+                btn.setAttribute('aria-pressed', sel);
+            });
+
+            const totals = calculateTicketTotals();
+            const mixedCol = document.getElementById('mixed-card-column');
+
+            if (method === 'card') {
+                mixedCol.classList.add('hidden');
+                document.getElementById('cash-tendered-input').value = "0.00";
+            } else if (method === 'mixed') {
+                mixedCol.classList.remove('hidden');
+                const half = (totals.grandTotal / 2).toFixed(2);
+                document.getElementById('cash-tendered-input').value = half;
+            } else {
+                mixedCol.classList.add('hidden');
+                document.getElementById('cash-tendered-input').value = totals.grandTotal.toFixed(2);
+            }
+            recalculateChange();
+        }
+
+        function setQuickCash(val) {
+            playBeep(950, 0.04);
+            if (activePaymentMethod === 'card') {
+                selectPaymentMethod('cash');
+            }
+            const totals = calculateTicketTotals();
+            const input = document.getElementById('cash-tendered-input');
+            if (val === 'exact') {
+                input.value = totals.grandTotal.toFixed(2);
+            } else {
+                input.value = Number(val).toFixed(2);
+            }
+            recalculateChange();
+        }
+
+        function recalculateChange() {
+            const totals = calculateTicketTotals();
+            const due = totals.grandTotal;
+            const tendered = parseFloat(document.getElementById('cash-tendered-input').value) || 0;
+
+            const changeBox = document.getElementById('change-result-box');
+            const labelEl = document.getElementById('change-status-label');
+            const amountEl = document.getElementById('checkout-change-amount');
+
+            if (activePaymentMethod === 'card') {
+                labelEl.innerHTML = bi('Cobro íntegro con tarjeta', '全部刷卡');
+                amountEl.textContent = formatEuro(0);
+                changeBox.dataset.state = 'card';
+                return;
+            }
+
+            if (activePaymentMethod === 'mixed') {
+                const cardPart = Math.max(0, due - tendered);
+                const change = Math.max(0, tendered - due);
+                document.getElementById('mixed-card-input').value = formatEuro(cardPart);
+                labelEl.innerHTML = change > 0 ? bi('Cambio en efectivo', '现金找零') : bi('Pago mixto cuadrado', '混合支付已付清');
+                amountEl.textContent = formatEuro(change);
+                changeBox.dataset.state = 'ok';
+                return;
+            }
+
+            // Cash mode
+            const diff = tendered - due;
+            if (diff >= -0.005) {
+                labelEl.innerHTML = bi('Cambio a devolver', '找零');
+                amountEl.textContent = formatEuro(Math.max(0, diff));
+                changeBox.dataset.state = 'ok';
+            } else {
+                labelEl.innerHTML = bi('Falta por cobrar', '还差');
+                amountEl.textContent = formatEuro(Math.abs(diff));
+                changeBox.dataset.state = 'due';
+            }
+        }
+
+        function completeSale(shouldPrint = false) {
+            const totals = calculateTicketTotals();
+            const due = totals.grandTotal;
+            const tendered = parseFloat(document.getElementById('cash-tendered-input').value) || 0;
+
+            let cashAmount = 0;
+            let cardAmount = 0;
+            let changeGiven = 0;
+
+            if (activePaymentMethod === 'cash') {
+                if (tendered + 0.005 < due) {
+                    showToast("El efectivo recibido es menor que el total a cobrar", "error", "实收现金少于应收金额");
+                    return;
+                }
+                cashAmount = due;
+                changeGiven = Math.max(0, tendered - due);
+            } else if (activePaymentMethod === 'card') {
+                cardAmount = due;
+            } else if (activePaymentMethod === 'mixed') {
+                cashAmount = Math.min(due, tendered);
+                cardAmount = Math.max(0, due - cashAmount);
+                changeGiven = Math.max(0, tendered - due);
+            }
+
+            const saleRecord = {
+                id: formatTicketNumber(ticketSequence),
+                seq: ticketSequence,
+                timestamp: new Date().toISOString(),
+                displayTime: new Date().toLocaleString('es-ES'),
+                items: JSON.parse(JSON.stringify(currentCart)),
+                discount: currentDiscount ? { ...currentDiscount } : null,
+                totals: totals,
+                paymentMethod: activePaymentMethod,
+                tendered: tendered,
+                cashAmount: cashAmount,
+                cardAmount: cardAmount,
+                changeGiven: changeGiven
+            };
+
+            completedSales.unshift(saleRecord);
+            ticketSequence++;
+            currentCart = [];
+            currentDiscount = null;
+
+            saveStateToStorage();
+            updateTopSalesPill();
+            renderReceipt();
+            closeCheckoutModal();
+
+            playBeep(1480, 0.1);
+            haptic(20);
+            showToast(`Venta ${saleRecord.id} completada (${formatEuro(saleRecord.totals.grandTotal)})`, "success", `收款完成（${formatEuro(saleRecord.totals.grandTotal)}）`);
+
+            if (shouldPrint || printerConfig.autoPrint) {
+                printReceiptThermal(saleRecord);
+            }
+        }
+
+        function updateTopSalesPill() {
+            const totalToday = completedSales.reduce((acc, s) => acc + s.totals.grandTotal, 0);
+            document.getElementById('today-sales-pill').textContent = formatEuro(totalToday);
+        }
+
+        // --- THERMAL PRINTER CONFIGURATION & ESC/POS ENGINE ---
+        function applyPaperWidthCSS() {
+            document.documentElement.style.setProperty('--thermal-paper-width', printerConfig.paperWidth || '80mm');
+        }
+
+        function updateNavPrinterBadge() {
+            const labelEl = document.getElementById('nav-printer-label');
+            const iconEl = document.getElementById('nav-printer-icon');
+            if (!labelEl || !iconEl) return;
+
+            const modeShort = printerConfig.mode === 'bluetooth'
+                ? (btCharacteristic ? 'BT conectada' : 'BT ESC/POS')
+                : (printerConfig.mode === 'rawbt' ? 'RawBT' : printerConfig.paperWidth);
+
+            labelEl.textContent = `Impresora (${modeShort})`;
+            iconEl.textContent = (printerConfig.mode === 'bluetooth' && btCharacteristic) ? 'bluetooth_connected' : 'print';
+        }
+
+        function openPrinterModal() {
+            selectPrinterMode(printerConfig.mode || 'browser');
+            selectPaperWidth(printerConfig.paperWidth || '80mm');
+            document.getElementById('chk-auto-print').checked = !!printerConfig.autoPrint;
+            document.getElementById('chk-cash-drawer').checked = printerConfig.openDrawer !== false;
+            document.getElementById('chk-auto-cut').checked = printerConfig.autoCut !== false;
+            document.getElementById('printer-footer-msg').value = printerConfig.footerText || DEFAULT_PRINTER_CONFIG.footerText;
+
+            const modal = document.getElementById('printer-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePrinterModal() {
+            const modal = document.getElementById('printer-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectPrinterMode(mode) {
+            printerConfig.mode = mode;
+            const modes = ['browser', 'bluetooth', 'rawbt'];
+            modes.forEach(m => {
+                const btn = document.getElementById(`pmode-${m}`);
+                if (!btn) return;
+                btn.classList.toggle('is-selected', m === mode);
+                btn.setAttribute('aria-pressed', m === mode);
+            });
+
+            const btPanel = document.getElementById('bt-pairing-panel');
+            if (mode === 'bluetooth') {
+                btPanel.classList.remove('hidden');
+            } else {
+                btPanel.classList.add('hidden');
+            }
+        }
+
+        function selectPaperWidth(width) {
+            printerConfig.paperWidth = width;
+            const btn80 = document.getElementById('paper-width-80');
+            const btn58 = document.getElementById('paper-width-58');
+            btn58.classList.toggle('is-selected', width === '58mm');
+            btn80.classList.toggle('is-selected', width !== '58mm');
+        }
+
+        function savePrinterSettings() {
+            printerConfig.autoPrint = document.getElementById('chk-auto-print').checked;
+            printerConfig.openDrawer = document.getElementById('chk-cash-drawer').checked;
+            printerConfig.autoCut = document.getElementById('chk-auto-cut').checked;
+            printerConfig.footerText = document.getElementById('printer-footer-msg').value.trim() || DEFAULT_PRINTER_CONFIG.footerText;
+
+            saveStateToStorage();
+            applyPaperWidthCSS();
+            updateNavPrinterBadge();
+            closePrinterModal();
+            showToast(`Impresora configurada (${printerConfig.paperWidth} • ${printerConfig.mode.toUpperCase()})`, "success", "打印机已设置好");
+        }
+
+        async function connectWebBluetoothPrinter() {
+            if (!navigator.bluetooth) {
+                showToast("Tu navegador no admite Web Bluetooth directo. Usa Chrome en Android o elige Diálogo nativo / RawBT.", "error", "这个浏览器不支持蓝牙直连打印");
+                return;
+            }
+            try {
+                // Standard BLE Thermal Printer UUIDs
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: [
+                        '000018f0-0000-1000-8000-00805f9b34fb',
+                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+                        '0000ff00-0000-1000-8000-00805f9b34fb'
+                    ]
+                });
+                btDevice = device;
+                document.getElementById('bt-device-status').textContent = `Conectando a ${device.name || 'impresora'}...`;
+
+                const server = await device.gatt.connect();
+                const services = await server.getPrimaryServices();
+                let foundChar = null;
+
+                for (const service of services) {
+                    const chars = await service.getCharacteristics();
+                    for (const c of chars) {
+                        if (c.properties.write || c.properties.writeWithoutResponse) {
+                            foundChar = c;
+                            break;
+                        }
+                    }
+                    if (foundChar) break;
+                }
+
+                if (!foundChar) {
+                    showToast("No se encontró canal de escritura ESC/POS en este dispositivo Bluetooth", "error", "这台蓝牙设备不能打印小票");
+                    return;
+                }
+
+                btCharacteristic = foundChar;
+                const statusEl = document.getElementById('bt-device-status');
+                statusEl.textContent = `Conectada: ${device.name || 'Impresora térmica'}`;
+                statusEl.classList.add('is-ok');
+                updateNavPrinterBadge();
+                showToast(`Impresora Bluetooth "${device.name || 'Térmica'}" vinculada`, "success", "蓝牙打印机已连接");
+            } catch (err) {
+                showToast("Vinculación Bluetooth cancelada o no disponible", "amber", "蓝牙连接已取消或不可用");
+            }
+        }
+
+        // Helper to normalize Spanish accents for basic ASCII ESC/POS printers
+        function cleanAsciiForEscPos(str) {
+            return String(str || '')
+                .replace(/€/g, 'EUR')
+                .replace(/[áàäâ]/g, 'a').replace(/[ÁÀÄÂ]/g, 'A')
+                .replace(/[éèëê]/g, 'e').replace(/[ÉÈËÊ]/g, 'E')
+                .replace(/[íìïî]/g, 'i').replace(/[ÍÌÏÎ]/g, 'I')
+                .replace(/[óòöô]/g, 'o').replace(/[ÓÒÖÔ]/g, 'O')
+                .replace(/[úùüû]/g, 'u').replace(/[ÚÙÜÛ]/g, 'U')
+                .replace(/ñ/g, 'n').replace(/Ñ/g, 'N')
+                .replace(/[^\x20-\x7E\n]/g, '');
+        }
+
+        function formatEscPosLine(left, right, width) {
+            const l = cleanAsciiForEscPos(left);
+            const r = cleanAsciiForEscPos(right);
+            const space = Math.max(1, width - l.length - r.length);
+            return l.slice(0, width - r.length - 1) + ' '.repeat(space) + r + '\n';
+        }
+
+        function buildEscPosPayload(sale) {
+            const cols = printerConfig.paperWidth === '58mm' ? 32 : 48;
+            const sep = '-'.repeat(cols) + '\n';
+            const methodLabels = { cash: 'EFECTIVO', card: 'TARJETA', mixed: 'MIXTO' };
+
+            let cmd = '\x1B\x40'; // Initialize printer
+            if (printerConfig.openDrawer) {
+                cmd += '\x1B\x70\x00\x19\xFA'; // Pulse Cash Drawer Pin 2
+            }
+
+            // Center Header
+            cmd += '\x1B\x61\x01'; // Align center
+            cmd += '\x1B\x45\x01'; // Bold ON
+            cmd += cleanAsciiForEscPos(shopConfig.name) + '\n';
+            cmd += '\x1B\x45\x00'; // Bold OFF
+            cmd += 'NIF: ' + cleanAsciiForEscPos(shopConfig.nif) + '\n';
+            cmd += cleanAsciiForEscPos(shopConfig.address) + '\n';
+            cmd += 'TICKET: ' + cleanAsciiForEscPos(sale.id) + '\n';
+            cmd += cleanAsciiForEscPos(sale.displayTime) + '\n';
+            cmd += sep;
+
+            // Left align items
+            cmd += '\x1B\x61\x00';
+            sale.items.forEach(i => {
+                const leftText = `${i.qty}x ${i.name.slice(0, cols - 14)} (${i.taxRate}%)`;
+                const rightText = `${(i.qty * i.unitPrice).toFixed(2)} EUR`;
+                cmd += formatEscPosLine(leftText, rightText, cols);
+            });
+            cmd += sep;
+
+            // Total
+            cmd += '\x1B\x45\x01';
+            cmd += formatEscPosLine('TOTAL (IVA INCL.):', `${sale.totals.grandTotal.toFixed(2)} EUR`, cols);
+            cmd += '\x1B\x45\x00';
+            cmd += formatEscPosLine('Pago:', methodLabels[sale.paymentMethod] || 'EFECTIVO', cols);
+            if (sale.paymentMethod !== 'card') {
+                cmd += formatEscPosLine('Entregado:', `${sale.tendered.toFixed(2)} EUR`, cols);
+                cmd += formatEscPosLine('Cambio:', `${sale.changeGiven.toFixed(2)} EUR`, cols);
+            }
+            cmd += sep;
+
+            // IVA Breakdown
+            cmd += 'DESGLOSE IVA:\n';
+            Object.values(sale.totals.brackets).filter(b => b.total > 0).forEach(b => {
+                cmd += formatEscPosLine(`IVA ${b.rate}% (Base ${b.base.toFixed(2)})`, `Cuota ${b.quota.toFixed(2)}`, cols);
+            });
+            cmd += sep;
+
+            // Footer
+            cmd += '\x1B\x61\x01';
+            cmd += cleanAsciiForEscPos(printerConfig.footerText || DEFAULT_PRINTER_CONFIG.footerText) + '\n\n\n\n';
+
+            if (printerConfig.autoCut) {
+                cmd += '\x1D\x56\x41\x10'; // GS V Full Cut with feed
+            }
+            return cmd;
+        }
+
+        async function sendEscPosViaWebBluetooth(escposString) {
+            if (!btCharacteristic) {
+                showToast("Impresora Bluetooth no conectada. Usando el diálogo de impresión estándar...", "amber", "蓝牙打印机未连接，改用系统打印");
+                return false;
+            }
+            try {
+                const encoder = new TextEncoder();
+                const bytes = encoder.encode(escposString);
+                const chunkSize = 100; // BLE MTU safe chunk size
+                for (let i = 0; i < bytes.length; i += chunkSize) {
+                    const chunk = bytes.slice(i, i + chunkSize);
+                    if (btCharacteristic.properties.writeWithoutResponse) {
+                        await btCharacteristic.writeValueWithoutResponse(chunk);
+                    } else {
+                        await btCharacteristic.writeValue(chunk);
+                    }
+                }
+                showToast("Ticket enviado a la impresora Bluetooth", "success", "小票已发送到打印机");
+                return true;
+            } catch (e) {
+                showToast("Error enviando por Bluetooth. Usando el diálogo del navegador.", "amber", "蓝牙发送失败，改用系统打印");
+                return false;
+            }
+        }
+
+        function sendEscPosViaRawBT(escposString) {
+            const base64Payload = btoa(escposString);
+            window.location.href = `rawbt:base64,${base64Payload}`;
+            showToast("Enviado a RawBT Print Service", "info", "已发送到 RawBT");
+        }
+
+        function testThermalPrinter() {
+            // Save current modal selections before running test
+            printerConfig.autoPrint = document.getElementById('chk-auto-print').checked;
+            printerConfig.openDrawer = document.getElementById('chk-cash-drawer').checked;
+            printerConfig.autoCut = document.getElementById('chk-auto-cut').checked;
+            printerConfig.footerText = document.getElementById('printer-footer-msg').value.trim() || DEFAULT_PRINTER_CONFIG.footerText;
+            applyPaperWidthCSS();
+
+            const sampleSale = {
+                id: "#TEST-001",
+                displayTime: new Date().toLocaleString('es-ES'),
+                items: [
+                    { name: "Artículo Prueba (Bazar)", qty: 2, unitPrice: 2.50, taxRate: 21 },
+                    { name: "Bebida Fría (Prueba)", qty: 1, unitPrice: 1.50, taxRate: 10 }
+                ],
+                paymentMethod: 'cash',
+                tendered: 10.00,
+                changeGiven: 3.50,
+                totals: {
+                    grandTotal: 6.50,
+                    totalBase: 5.50,
+                    totalQuota: 1.00,
+                    brackets: {
+                        10: { rate: 10, base: 1.36, quota: 0.14, total: 1.50 },
+                        21: { rate: 21, base: 4.13, quota: 0.87, total: 5.00 }
+                    }
+                }
+            };
+            printReceiptThermal(sampleSale);
+        }
+
+        // --- THERMAL RECEIPT & Z-REPORT PRINTING (58MM / 80MM / BLUETOOTH / RAWBT) ---
+        async function printReceiptThermal(sale) {
+            // 1. Direct Web Bluetooth ESC/POS
+            if (printerConfig.mode === 'bluetooth') {
+                const payload = buildEscPosPayload(sale);
+                const sent = await sendEscPosViaWebBluetooth(payload);
+                if (sent) return;
+            }
+
+            // 2. RawBT Android ESC/POS Bridge
+            if (printerConfig.mode === 'rawbt') {
+                const payload = buildEscPosPayload(sale);
+                sendEscPosViaRawBT(payload);
+                return;
+            }
+
+            // 3. Universal Browser / AirPrint / Android System Print Dialog (58mm or 80mm)
+            applyPaperWidthCSS();
+            const printArea = document.getElementById('thermal-print-area');
+            const methodLabels = { cash: 'EFECTIVO', card: 'TARJETA', mixed: 'MIXTO' };
+            const maxChars = printerConfig.paperWidth === '58mm' ? 14 : 20;
+
+            const itemsHtml = sale.items.map(i => `
+                <div style="display:flex; justify-content:space-between; margin: 2px 0;">
+                    <span>${i.qty}x ${escapeHtml(i.name.slice(0, maxChars))} (${i.taxRate}%)</span>
+                    <span>${(i.qty * i.unitPrice).toFixed(2)} €</span>
+                </div>
+            `).join('');
+
+            const taxRowsHtml = Object.values(sale.totals.brackets)
+                .filter(b => b.total > 0)
+                .map(b => `
+                    <div style="display:flex; justify-content:space-between; font-size:10px;">
+                        <span>IVA ${b.rate}%</span>
+                        <span>Base: ${b.base.toFixed(2)}€</span>
+                        <span>Cuota: ${b.quota.toFixed(2)}€</span>
+                    </div>
+                `).join('');
+
+            printArea.innerHTML = `
+                <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+                    <div style="font-weight:bold; font-size:14px;">${escapeHtml(shopConfig.name)}</div>
+                    <div>NIF: ${escapeHtml(shopConfig.nif)}</div>
+                    <div>${escapeHtml(shopConfig.address)}</div>
+                    <div style="margin-top:4px;">FACTURA SIMPLIFICADA: <strong>${sale.id}</strong></div>
+                    <div>Fecha: ${sale.displayTime}</div>
+                </div>
+                <div style="border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+                    ${itemsHtml}
+                </div>
+                <div style="border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px;">
+                        <span>TOTAL (IVA INCL.)</span>
+                        <span>${sale.totals.grandTotal.toFixed(2)} €</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:2px;">
+                        <span>Forma de Pago:</span>
+                        <span>${methodLabels[sale.paymentMethod]}</span>
+                    </div>
+                    ${sale.paymentMethod !== 'card' ? `
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>Entregado:</span>
+                            <span>${sale.tendered.toFixed(2)} €</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>Cambio:</span>
+                            <span>${sale.changeGiven.toFixed(2)} €</span>
+                        </div>
+                    ` : ''}
+                </div>
+                <div style="margin-bottom:8px;">
+                    <div style="font-weight:bold; margin-bottom:2px;">DESGLOSE DE IVA:</div>
+                    ${taxRowsHtml}
+                </div>
+                <div style="text-align:center; font-size:10px; margin-top:10px;">
+                    ${escapeHtml(printerConfig.footerText || DEFAULT_PRINTER_CONFIG.footerText)}
+                </div>
+            `;
+
+            window.print();
+        }
+
+        // --- Z-REPORT (CIERRE DE CAJA) & HISTORY ---
+        function aggregateZReport() {
+            const summary = {
+                totalSales: 0,
+                cashTotal: 0,
+                cardTotal: 0,
+                totalBase: 0,
+                totalQuota: 0,
+                brackets: {
+                    4:  { rate: 4,  base: 0, quota: 0, total: 0 },
+                    10: { rate: 10, base: 0, quota: 0, total: 0 },
+                    21: { rate: 21, base: 0, quota: 0, total: 0 }
+                },
+                byDept: {}
+            };
+
+            completedSales.forEach(s => {
+                summary.totalSales += s.totals.grandTotal;
+                summary.cashTotal += s.cashAmount;
+                summary.cardTotal += s.cardAmount;
+                summary.totalBase += s.totals.totalBase;
+                summary.totalQuota += s.totals.totalQuota;
+
+                Object.values(s.totals.brackets).forEach(b => {
+                    if (!summary.brackets[b.rate]) {
+                        summary.brackets[b.rate] = { rate: b.rate, base: 0, quota: 0, total: 0 };
+                    }
+                    summary.brackets[b.rate].base += b.base;
+                    summary.brackets[b.rate].quota += b.quota;
+                    summary.brackets[b.rate].total += b.total;
+                });
+
+                s.items.forEach(i => {
+                    const key = i.name.split(' — ')[0];
+                    summary.byDept[key] = (summary.byDept[key] || 0) + (i.unitPrice * i.qty);
+                });
+            });
+
+            return summary;
+        }
+
+        function openZReportModal() {
+            renderZReportContent();
+            document.getElementById('zreport-modal').classList.remove('hidden');
+            document.getElementById('zreport-modal').classList.add('flex');
+        }
+
+        function closeZReportModal() {
+            document.getElementById('zreport-modal').classList.add('hidden');
+            document.getElementById('zreport-modal').classList.remove('flex');
+        }
+
+        function renderZReportContent() {
+            const z = aggregateZReport();
+            document.getElementById('z-total-sales').textContent = formatEuro(z.totalSales);
+            document.getElementById('z-ticket-count').textContent = `${completedSales.length} operaciones válidas`;
+            document.getElementById('z-cash-total').textContent = formatEuro(z.cashTotal);
+            document.getElementById('z-card-total').textContent = formatEuro(z.cardTotal);
+            document.getElementById('z-net-base').textContent = `Base: ${formatEuro(z.totalBase)}`;
+            document.getElementById('z-total-iva').textContent = `Cuota IVA: ${formatEuro(z.totalQuota)}`;
+
+            // IVA Table
+            const ivaBody = document.getElementById('z-iva-table-body');
+            ivaBody.innerHTML = [4, 10, 21].map(r => {
+                const b = z.brackets[r];
+                return `
+                    <tr>
+                        <td class="title-s">IVA ${r} %</td>
+                        <td class="r">${formatEuro(b.base)}</td>
+                        <td class="r">${formatEuro(b.quota)}</td>
+                        <td class="r title-s">${formatEuro(b.total)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Dept Breakdown
+            const deptEntries = Object.entries(z.byDept).sort((a, b) => b[1] - a[1]);
+            const deptContainer = document.getElementById('z-dept-breakdown');
+            if (deptEntries.length === 0) {
+                deptContainer.innerHTML = `<div class="body-m muted" style="padding:16px 0;text-align:center">Sin ventas registradas hoy.</div>`;
+            } else {
+                deptContainer.innerHTML = deptEntries.map(([name, total]) => `
+                    <div class="kv-row">
+                        <span class="body-m truncate">${escapeHtml(name)}</span>
+                        <span class="title-s num">${formatEuro(total)}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Tickets List
+            const listEl = document.getElementById('z-tickets-list');
+            if (completedSales.length === 0) {
+                listEl.innerHTML = `<div class="body-m muted" style="padding:48px 0;text-align:center">Aún no se han emitido tickets en esta jornada.</div>`;
+            } else {
+                const badgeMap = {
+                    cash: '<span class="tag"><span class="ms ms-18">payments</span>Efectivo</span>',
+                    card: '<span class="tag"><span class="ms ms-18">credit_card</span>Tarjeta</span>',
+                    mixed: '<span class="tag"><span class="ms ms-18">call_split</span>Mixto</span>'
+                };
+                listEl.innerHTML = completedSales.map(s => `
+                    <div class="kv-row">
+                        <div class="grow stack-4" style="gap:2px">
+                            <div class="row gap-8">
+                                <span class="title-s num">${s.id}</span>
+                                ${badgeMap[s.paymentMethod] || ''}
+                                <span class="body-m muted num">${s.displayTime}</span>
+                            </div>
+                            <div class="body-m muted truncate">
+                                ${s.items.map(i => `${i.qty}x ${escapeHtml(i.name)}`).join(', ')}
+                            </div>
+                        </div>
+                        <div class="row gap-4">
+                            <span class="title-m num">${formatEuro(s.totals.grandTotal)}</span>
+                            <button onclick="reprintSaleById('${s.id}')" class="btn icon-btn icon-btn--plain" title="Imprimir recibo" aria-label="Imprimir recibo">
+                                <span class="ms ms-20">print</span>
+                            </button>
+                            <button onclick="voidCompletedSale('${s.id}')" class="btn icon-btn icon-btn--danger" title="Anular / devolver ticket" aria-label="Anular ticket">
+                                <span class="ms ms-20">undo</span>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function reprintSaleById(id) {
+            const sale = completedSales.find(s => s.id === id);
+            if (sale) printReceiptThermal(sale);
+        }
+
+        function voidCompletedSale(id) {
+            completedSales = completedSales.filter(s => s.id !== id);
+            saveStateToStorage();
+            updateTopSalesPill();
+            renderZReportContent();
+            showToast(`Ticket ${id} anulado del cierre`, "amber", `小票 ${id} 已作废`);
+        }
+
+        function resetDaySalesPrompt() {
+            if (completedSales.length === 0) {
+                showToast("No hay ventas para reiniciar", "info", "没有可以清零的销售");
+                return;
+            }
+            completedSales = [];
+            ticketSequence = 1;
+            saveStateToStorage();
+            updateTopSalesPill();
+            renderZReportContent();
+            renderReceipt();
+            showToast("Cierre de caja completado. Contador reiniciado a #T-0001", "success", "日结完成，小票编号重新从 #T-0001 开始");
+        }
+
+        function printZReportThermal() {
+            const z = aggregateZReport();
+            const printArea = document.getElementById('thermal-print-area');
+            printArea.innerHTML = `
+                <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+                    <div style="font-weight:bold; font-size:14px;">CIERRE DE CAJA (Z-REPORT)</div>
+                    <div>${escapeHtml(shopConfig.name)}</div>
+                    <div>NIF: ${escapeHtml(shopConfig.nif)}</div>
+                    <div>Fecha: ${new Date().toLocaleString('es-ES')}</div>
+                </div>
+                <div style="border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between;"><span>Tickets Emitidos:</span><span>${completedSales.length}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Total Efectivo:</span><span>${z.cashTotal.toFixed(2)} €</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Total Tarjeta:</span><span>${z.cardTotal.toFixed(2)} €</span></div>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:4px;">
+                        <span>TOTAL VENTAS:</span><span>${z.totalSales.toFixed(2)} €</span>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-weight:bold; margin-bottom:3px;">DESGLOSE CONTABLE IVA:</div>
+                    ${[4, 10, 21].map(r => {
+                        const b = z.brackets[r];
+                        return `<div style="display:flex; justify-content:space-between; font-size:10px;">
+                            <span>IVA ${r}%</span>
+                            <span>B: ${b.base.toFixed(2)}€</span>
+                            <span>C: ${b.quota.toFixed(2)}€</span>
+                            <span>T: ${b.total.toFixed(2)}€</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `;
+            window.print();
+        }
+
+        function exportSalesCSV() {
+            if (completedSales.length === 0) {
+                showToast("No hay ventas para exportar", "amber", "没有可以导出的销售");
+                return;
+            }
+            const headers = [
+                "Ticket_ID", "Fecha_Hora", "Metodo_Pago",
+                "Base_4%", "IVA_4%", "Base_10%", "IVA_10%", "Base_21%", "IVA_21%",
+                "Base_Total", "IVA_Total", "Total_Bruto_EUR"
+            ];
+            const rows = completedSales.map(s => {
+                const b4 = s.totals.brackets[4] || { base: 0, quota: 0 };
+                const b10 = s.totals.brackets[10] || { base: 0, quota: 0 };
+                const b21 = s.totals.brackets[21] || { base: 0, quota: 0 };
+                return [
+                    s.id,
+                    `"${s.displayTime}"`,
+                    s.paymentMethod.toUpperCase(),
+                    b4.base.toFixed(2), b4.quota.toFixed(2),
+                    b10.base.toFixed(2), b10.quota.toFixed(2),
+                    b21.base.toFixed(2), b21.quota.toFixed(2),
+                    s.totals.totalBase.toFixed(2),
+                    s.totals.totalQuota.toFixed(2),
+                    s.totals.grandTotal.toFixed(2)
+                ].join(',');
+            });
+
+            const csvContent = "﻿" + headers.join(',') + "\n" + rows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Cierre_Z_TPV_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Archivo CSV contable descargado", "success", "表格已下载");
+        }
+
+        // --- CUSTOMIZE BUTTONS & IVA MODAL (SETTINGS) ---
+        function renderShopHeader() {
+            document.getElementById('nav-shop-name').textContent = shopConfig.name;
+        }
+
+        function openSettingsModal() {
+            document.getElementById('set-shop-name').value = shopConfig.name;
+            document.getElementById('set-shop-nif').value = shopConfig.nif;
+            document.getElementById('set-shop-address').value = shopConfig.address;
+
+            const deptList = document.getElementById('settings-departments-list');
+            const colorOptions = Object.keys(DEPT_COLORS);
+
+            deptList.innerHTML = departments.map((d, idx) => {
+                const color = DEPT_COLORS[d.color] ? d.color : 'slate';
+                return `
+                <div class="card-inset stack-8">
+                    <div class="row between">
+                        <span class="label-l muted">Departamento ${idx + 1}</span>
+                        <span class="dot" style="background: var(--dept-${color})" aria-hidden="true"></span>
+                    </div>
+                    <input id="edit-dept-name-${idx}" type="text" value="${escapeHtml(d.name)}" class="field" aria-label="Nombre del departamento ${idx + 1}">
+                    <label class="stack-4 zh-only">
+                        <span class="label-m muted">Nombre en chino <span lang="zh-Hans" style="font-family:var(--zh-font)">中文名称</span></span>
+                        <input id="edit-dept-zh-${idx}" type="text" value="${escapeHtml(deptZh(d))}" class="field" lang="zh-Hans" style="font-family:var(--zh-font);font-size:20px">
+                    </label>
+                    <div class="grid-2" style="gap:8px">
+                        <label class="stack-4">
+                            <span class="label-m muted">Tipo de IVA</span>
+                            <select id="edit-dept-tax-${idx}" class="field num">
+                                <option value="4" ${d.tax == 4 ? 'selected' : ''}>4 %</option>
+                                <option value="10" ${d.tax == 10 ? 'selected' : ''}>10 %</option>
+                                <option value="21" ${d.tax == 21 ? 'selected' : ''}>21 %</option>
+                                <option value="0" ${d.tax == 0 ? 'selected' : ''}>0 % exento</option>
+                            </select>
+                        </label>
+                        <label class="stack-4">
+                            <span class="label-m muted">Marca de color</span>
+                            <select id="edit-dept-color-${idx}" class="field" onchange="this.closest('.card-inset').querySelector('.dot').style.background = 'var(--dept-' + this.value + ')'">
+                                ${colorOptions.map(c => `<option value="${c}" ${color === c ? 'selected' : ''}>${DEPT_COLORS[c]}</option>`).join('')}
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            const presetList = document.getElementById('settings-presets-list');
+            presetList.innerHTML = quickPresets.map((p, idx) => `
+                <div class="card-inset stack-8">
+                    <span class="label-l muted">Artículo rápido ${idx + 1}</span>
+                    <input id="edit-preset-name-${idx}" type="text" value="${escapeHtml(p.name)}" class="field" aria-label="Nombre del artículo rápido ${idx + 1}">
+                    <label class="stack-4 zh-only">
+                        <span class="label-m muted">Nombre en chino <span lang="zh-Hans" style="font-family:var(--zh-font)">中文名称</span></span>
+                        <input id="edit-preset-zh-${idx}" type="text" value="${escapeHtml(presetZh(p))}" class="field" lang="zh-Hans" style="font-family:var(--zh-font);font-size:20px">
+                    </label>
+                    <div class="grid-2" style="gap:8px">
+                        <label class="stack-4">
+                            <span class="label-m muted">Precio fijo (€)</span>
+                            <input id="edit-preset-price-${idx}" type="number" step="0.05" inputmode="decimal" value="${p.price}" class="field num">
+                        </label>
+                        <label class="stack-4">
+                            <span class="label-m muted">IVA</span>
+                            <select id="edit-preset-tax-${idx}" class="field num">
+                                <option value="4" ${p.tax == 4 ? 'selected' : ''}>4 %</option>
+                                <option value="10" ${p.tax == 10 ? 'selected' : ''}>10 %</option>
+                                <option value="21" ${p.tax == 21 ? 'selected' : ''}>21 %</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+
+            updateLangControls();
+            updateInstallUI();
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('settings-modal').classList.add('flex');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.add('hidden');
+            document.getElementById('settings-modal').classList.remove('flex');
+        }
+
+        function saveSettingsFromModal() {
+            shopConfig.name = document.getElementById('set-shop-name').value.trim() || DEFAULT_SHOP_CONFIG.name;
+            shopConfig.nif = document.getElementById('set-shop-nif').value.trim() || DEFAULT_SHOP_CONFIG.nif;
+            shopConfig.address = document.getElementById('set-shop-address').value.trim() || DEFAULT_SHOP_CONFIG.address;
+
+            departments.forEach((d, idx) => {
+                const nameVal = document.getElementById(`edit-dept-name-${idx}`).value.trim();
+                const taxVal = parseInt(document.getElementById(`edit-dept-tax-${idx}`).value, 10);
+                const colorVal = document.getElementById(`edit-dept-color-${idx}`).value;
+                const zhVal = document.getElementById(`edit-dept-zh-${idx}`).value.trim();
+                if (nameVal) d.name = nameVal;
+                d.zh = zhVal;
+                d.tax = isNaN(taxVal) ? 21 : taxVal;
+                d.color = colorVal;
+            });
+
+            quickPresets.forEach((p, idx) => {
+                const nameVal = document.getElementById(`edit-preset-name-${idx}`).value.trim();
+                const priceVal = parseFloat(document.getElementById(`edit-preset-price-${idx}`).value);
+                const taxVal = parseInt(document.getElementById(`edit-preset-tax-${idx}`).value, 10);
+                const zhVal = document.getElementById(`edit-preset-zh-${idx}`).value.trim();
+                if (nameVal) p.name = nameVal;
+                p.zh = zhVal;
+                p.price = isNaN(priceVal) || priceVal < 0 ? 1.00 : priceVal;
+                p.tax = isNaN(taxVal) ? 21 : taxVal;
+            });
+
+            saveStateToStorage();
+            renderShopHeader();
+            renderDepartments();
+            renderQuickPresets();
+            closeSettingsModal();
+            showToast("Configuración guardada", "success", "设置已保存");
+        }
+
+        function resetDefaultSettings() {
+            shopConfig = { ...DEFAULT_SHOP_CONFIG };
+            departments = JSON.parse(JSON.stringify(DEFAULT_DEPARTMENTS));
+            quickPresets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+            saveStateToStorage();
+            renderShopHeader();
+            renderDepartments();
+            renderQuickPresets();
+            closeSettingsModal();
+            showToast("Botones restaurados a los valores de fábrica", "info", "已恢复默认设置");
+        }
+
+        // --- PHYSICAL KEYBOARD SUPPORT ---
+        function handlePhysicalKeyboard(e) {
+            // Ignore if typing inside an input field or if a modal is open
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+            const anyModalOpen = !document.getElementById('checkout-modal').classList.contains('hidden') ||
+                                 !document.getElementById('zreport-modal').classList.contains('hidden') ||
+                                 !document.getElementById('settings-modal').classList.contains('hidden') ||
+                                 !document.getElementById('printer-modal').classList.contains('hidden') ||
+                                 !document.getElementById('appearance-modal').classList.contains('hidden');
+            if (anyModalOpen) return;
+
+            if (e.key >= '0' && e.key <= '9') {
+                pressDigit(e.key);
+            } else if (e.key === '.' || e.key === ',') {
+                pressDecimal();
+            } else if (e.key === 'Backspace') {
+                pressBackspace();
+            } else if (e.key === 'Escape' || e.key === 'Delete') {
+                pressClear();
+            } else if (e.key === '*' || e.key.toLowerCase() === 'x') {
+                pressQtyMultiplier();
+            } else if (e.key === 'Enter') {
+                openCheckoutModal();
+            }
+        }
+
+        // --- UTILITIES & SNACKBAR ---
+        function showToast(message, type = 'info', zhMessage = '') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icons = { info: 'info', success: 'check_circle', amber: 'warning', error: 'error' };
+            const kind = icons[type] ? type : 'info';
+            toast.className = `snackbar snackbar--${kind}`;
+            const zhLine = zhMessage ? `<span class="zh" lang="zh-Hans" style="white-space:normal">${escapeHtml(zhMessage)}</span>` : '';
+            toast.innerHTML = `<span class="ms ms-20 ms-fill">${icons[kind]}</span><span class="snack-text">${zhLine}<span>${escapeHtml(message)}</span></span>`;
+            container.appendChild(toast);
+            // Con chino activado el aviso dura más: dos idiomas que leer
+            const duration = (secondaryLang === 'zh' && zhMessage) ? 4200 : 2600;
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 200);
+            }, duration);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
