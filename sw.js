@@ -3,9 +3,9 @@
  * Permite abrir la app sin conexión y la deja instalable.
  *
  * Al publicar una versión nueva de index.html, cambia CACHE_VERSION
- * (por ejemplo, 'quicktap-v2') para que todos los dispositivos la reciban.
+ * (por ejemplo, de 'quicktap-v2' a 'quicktap-v3') para que todos los dispositivos la reciban.
  */
-const CACHE_VERSION = 'quicktap-v1';
+const CACHE_VERSION = 'quicktap-v2';
 const FONT_CACHE = 'quicktap-fonts-v1';
 
 const APP_SHELL = [
@@ -17,7 +17,9 @@ const APP_SHELL = [
     './icons/maskable-512.png',
     './icons/apple-touch-icon.png',
     './icons/favicon-32.png',
-    './icons/favicon.svg'
+    './icons/favicon.svg',
+    './fonts/qt-sans-sc-medium.woff',
+    './fonts/qt-sans-sc-bold.woff'
 ];
 
 // Instalación: guarda la app completa en la caché
@@ -63,7 +65,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Iconos y manifiesto: primero la caché
+    // Iconos, fuente china y manifiesto: primero la caché
     event.respondWith(cacheFirst(request));
 });
 
