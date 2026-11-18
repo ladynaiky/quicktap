@@ -345,13 +345,19 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         }
         .col-ticket { width: 31%; }
         .col-keypad { width: 30%; padding: 8px; gap: 8px; }
-        .col-products { flex: 1; padding: 8px 10px 10px; gap: 6px; container-type: inline-size; }
+        .col-products { flex: 1; padding: 8px 10px 10px; gap: 6px; container-type: inline-size; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 
         /* ---- Ticket ---- */
-        .ticket-head { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 4px 4px 16px; }
+        .ticket-head { flex-shrink: 0; display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 4px 4px 16px; }
+        .ticket-actions, .ticket-foot { flex-shrink: 0; }
         .ticket-head .bi.inline { gap: 6px; }
-        .ticket-title { font-size: 18px; font-weight: 600; }
-        .ticket-count { font-size: 16px; color: var(--md-on-surface-variant); }
+        .ticket-title { font-size: 18px; font-weight: 600; flex-wrap: nowrap; white-space: nowrap; min-width: 0; }
+        .ticket-title .bi.inline { flex-wrap: nowrap; }
+        .ticket-num { white-space: nowrap; }
+        .recovered-tag { flex-shrink: 0; height: 28px; padding: 0 8px; background: var(--md-tertiary-container, var(--md-primary-container)); color: var(--md-on-tertiary-container, var(--md-on-primary-container)); box-shadow: none; }
+        .recovered-tag .zh-text { font-size: 24px; line-height: 28px; }
+        /* El hueco del contador se reserva siempre, para que la cabecera no cambie de alto al añadir la primera línea */
+        .ticket-count { font-size: 16px; color: var(--md-on-surface-variant); height: 34px; flex: 0 0 34px; display: flex; align-items: center; overflow: hidden; }
         .receipt-list { flex: 1; overflow-y: auto; padding: 0 8px; -webkit-overflow-scrolling: touch; }
         .line {
             width: 100%;
@@ -408,43 +414,63 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         .tax-head { color: var(--md-on-surface-variant); font-weight: 600; padding-bottom: 4px; border-bottom: 1px solid var(--md-outline-variant); }
         .tax-row { color: var(--md-on-surface-variant); }
         .tax-row.is-active { color: var(--md-on-surface); font-weight: 600; }
-        .total-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 18px; font-weight: 600; }
-        .total-amount { font-size: clamp(34px, 3.8vw, 46px); font-weight: 700; line-height: 1.1; }
+        .total-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 18px; font-weight: 600; height: 52px; flex: 0 0 52px; }
+        .total-row > .bi { flex-shrink: 0; }
+        .total-row .bi > .es, .total-row .bi > .zh { white-space: nowrap; }
+        .total-amount { --total-fs: clamp(34px, 3.8vw, 46px); font-size: var(--total-fs); font-weight: 700; line-height: 1.1; min-width: 0; white-space: nowrap; text-align: right; overflow: hidden; }
+        /* Con importes muy largos la cifra se hace más pequeña, pero la fila mide lo mismo */
+        .total-amount[data-len="10"] { font-size: calc(var(--total-fs) * .88); }
+        .total-amount[data-len="11"] { font-size: calc(var(--total-fs) * .78); }
+        .total-amount[data-len="12"] { font-size: calc(var(--total-fs) * .66); }
         .charge-btn { width: 100%; min-height: 88px; justify-content: space-between; padding: 8px 18px; font-size: 26px; font-weight: 700; --zh: 36px; --zh2: 28px; --es2: 20px; }
-        .charge-amount { font-size: 26px; font-weight: 700; }
+        .charge-amount { font-size: 26px; font-weight: 700; white-space: nowrap; }
+        .charge-amount[data-len="11"] { font-size: 23px; }
+        .charge-amount[data-len="12"] { font-size: 20px; }
 
         /* ---- Calculadora estilo Casio ---- */
+        /* La pantalla NO cambia de tamaño: cada fila tiene alto fijo y el mensaje tiene sitio para 2 líneas
+           (--lcd-msg-h cambia solo cuando se cambia el idioma en Ajustes, nunca al escribir) */
         .lcd {
-            flex-shrink: 0;
+            --lcd-msg-h: 24px;
+            --lcd-value-h: 64px; --lcd-pt: 10px; --lcd-pb: 12px; --lcd-gap: 4px;
+            --lcd-h: calc(var(--lcd-pt) + var(--lcd-pb) + 3 * var(--lcd-gap) + 34px + 24px + var(--lcd-value-h) + var(--lcd-msg-h));
+            box-sizing: border-box;
+            flex: 0 0 var(--lcd-h); height: var(--lcd-h);
+            overflow: hidden;
+            container-type: inline-size;
             background: var(--qt-lcd-container);
             color: var(--qt-on-lcd-container);
             border-radius: var(--radius-m);
             box-shadow: inset 0 0 0 1.5px var(--md-outline);
-            padding: 10px 14px 12px;
-            display: flex; flex-direction: column; gap: 4px;
+            padding: var(--lcd-pt) 14px var(--lcd-pb);
+            display: flex; flex-direction: column; gap: var(--lcd-gap);
             transition: box-shadow .12s ease;
         }
+        html[data-lang="zh"] .lcd { --lcd-msg-h: 34px; }
+        html[data-lang="es-zh"] .lcd, html[data-lang="zh-es"] .lcd { --lcd-msg-h: 56px; }
         .lcd.lcd--qty { box-shadow: inset 0 0 0 3px var(--md-primary); }
         .lcd.lcd--error { box-shadow: inset 0 0 0 3px var(--md-error); }
         .lcd.lcd--ok { box-shadow: inset 0 0 0 3px var(--qt-cobrar); }
-        .lcd-top { display: flex; align-items: center; gap: 6px; min-height: 30px; flex-wrap: wrap; }
+        .lcd-top { display: flex; align-items: center; gap: 6px; height: 34px; flex: 0 0 34px; flex-wrap: nowrap; overflow: hidden; }
         .lcd-ind {
-            display: inline-flex; align-items: center; gap: 4px;
+            display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
             height: 30px; padding: 0 8px;
             border-radius: var(--radius-xs);
             box-shadow: inset 0 0 0 2px currentColor;
-            font-size: 16px; font-weight: 700;
+            font-size: 16px; font-weight: 700; white-space: nowrap;
         }
-        .lcd-dept { background: var(--md-primary); color: var(--md-on-primary); box-shadow: none; max-width: 100%; }
-        .lcd-dept { height: auto; min-height: 30px; padding: 2px 10px; }
-        .lcd-dept .zh-text { font-size: 24px; line-height: 1.3; }
-        .lcd-formula { text-align: right; font-size: 18px; font-weight: 600; }
-        .lcd-value { display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; }
-        .lcd-value .num { font-size: clamp(44px, 5vw, 60px); font-weight: 600; line-height: 1.05; }
-        .lcd-unit { font-size: 28px; font-weight: 600; }
-        .lcd-msg { text-align: right; font-size: 17px; font-weight: 600; min-height: 26px; display: flex; justify-content: flex-end; }
-        .lcd-msg .bi { align-items: flex-end; text-align: right; }
-        .lcd-msg .bi > .zh { white-space: normal; }
+        .lcd-dept { background: var(--md-primary); color: var(--md-on-primary); box-shadow: none; max-width: 100%; min-width: 0; flex-shrink: 1; padding: 0 10px; }
+        .lcd-dept .zh-text { font-size: 24px; line-height: 30px; }
+        .lcd-formula { flex: 0 0 24px; height: 24px; line-height: 24px; text-align: right; font-size: 18px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lcd .lcd-formula.hidden { display: block !important; visibility: hidden; }
+        .lcd-value { flex: 0 0 var(--lcd-value-h); height: var(--lcd-value-h); display: flex; align-items: center; justify-content: flex-end; gap: 6px; white-space: nowrap; overflow: hidden; }
+        .lcd-value .num { font-size: min(54px, 17cqw); font-weight: 600; line-height: 1; }
+        .lcd-unit { font-size: 28px; font-weight: 600; line-height: 1; }
+        .lcd-msg { flex: 0 0 var(--lcd-msg-h); height: var(--lcd-msg-h); overflow: hidden; text-align: right; font-size: 17px; font-weight: 600; display: flex; justify-content: flex-end; align-items: flex-start; }
+        /* Cada idioma ocupa una sola línea; si un nombre largo no cabe, se corta con «…» y la pantalla sigue igual */
+        .lcd-msg { min-width: 0; }
+        .lcd-msg .bi { align-items: flex-end; text-align: right; max-width: 100%; }
+        .lcd-msg .bi > .zh, .lcd-msg .bi > .es { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         .lcd-msg { --zh: 24px; --zh2: 24px; --es2: 16px; }
         .lcd-msg.is-error { color: var(--md-error); }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
@@ -488,10 +514,10 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         html[data-cents="on"] .key-zero { grid-column: span 2; }
 
         /* ---- Artículos rápidos y departamentos ---- */
-        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; font-size: 17px; font-weight: 600; color: var(--md-on-surface-variant); }
+        .section-head { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; font-size: 17px; font-weight: 600; color: var(--md-on-surface-variant); }
         .section-head .bi { --zh: 24px; --zh2: 24px; }
-        .presets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex-shrink: 0; }
-        .depts-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 8px; }
+        .presets-grid { --row-min: 92px; flex: var(--rows, 2) 1 0; min-height: calc(var(--rows, 2) * var(--row-min) + (var(--rows, 2) - 1) * 8px); display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(var(--rows, 2), 1fr); gap: 8px; }
+        .depts-grid { --row-min: 88px; flex: var(--rows, 3) 1 0; min-height: calc(var(--rows, 3) * var(--row-min) + (var(--rows, 3) - 1) * 8px); display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(var(--rows, 3), 1fr); gap: 8px; }
         .tile {
             position: relative;
             align-items: stretch; justify-content: space-between; flex-direction: column;
@@ -503,7 +529,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         }
         /* Artículos rápidos: ficha blanca con borde */
         .tile--preset {
-            min-height: 84px;
+            min-height: 0; padding-top: 6px; padding-bottom: 6px;
             background: var(--md-surface-container-lowest);
             box-shadow: inset 0 0 0 1.5px var(--md-outline);
         }
@@ -590,7 +616,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .method-btn { min-height: 168px; flex-direction: column; gap: 12px; font-size: 26px; font-weight: 700; border-radius: var(--radius-l); --zh: 40px; --zh2: 30px; --es2: 22px; }
         .method-btn .ms { font-size: 52px; width: 52px; height: 52px; }
-        .cash-layout { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; }
+        .cash-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; }
         .money-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .money {
             min-height: 76px; border-radius: var(--radius-m);
@@ -608,7 +634,9 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         .change-box .num { display: block; font-size: 56px; line-height: 1.1; font-weight: 700; }
         .change-box[data-state="due"] { background: var(--md-error-container); color: var(--md-on-error-container); }
         .change-box[data-state="card"] { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
-        .finish-btn { min-height: 92px; width: 100%; font-size: 26px; font-weight: 700; --zh: 38px; --zh2: 28px; --es2: 20px; }
+        .finish-pair { display: flex; flex-direction: column; gap: 10px; }
+        .finish-btn { min-height: 84px; width: 100%; font-size: 22px; font-weight: 700; --zh: 30px; --zh2: 26px; --es2: 19px; }
+        .finish-btn .bi > .zh { white-space: normal; }
         .card-step { text-align: center; padding: 8px 0; font-size: 20px; font-weight: 600; --zh: 30px; --zh2: 24px; }
         .card-step .bi > .zh { white-space: normal; }
 
@@ -656,6 +684,10 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         .check-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; cursor: pointer; font-size: 18px; }
         .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; cursor: pointer; }
         .setting-title { font-size: 20px; font-weight: 700; --zh: 26px; --zh2: 24px; --es2: 17px; }
+        .count-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 16px; background: var(--md-surface-container-high); font-size: 16px; font-weight: 600; }
+        .remove-btn { min-height: 48px; padding: 4px 8px; min-width: 0; gap: 4px; }
+        #settings-departments-list, #settings-presets-list { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
+        .remove-btn[disabled] { opacity: .38; }
         .setting-help { font-size: 16px; color: var(--md-on-surface-variant); --zh: 24px; --zh2: 24px; }
         .setting-help .bi > .zh { white-space: normal; }
         .lang-seg .seg { min-height: 76px; }
@@ -722,9 +754,19 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
            ========================================================= */
         @media (orientation: portrait) and (max-width: 1100px) {
             .workspace { flex-wrap: wrap; align-content: stretch; }
-            .col-ticket { width: 100%; height: 36%; }
-            .col-keypad { width: calc(50% - 4px); height: calc(64% - 8px); }
-            .col-products { width: calc(50% - 4px); height: calc(64% - 8px); flex: none; }
+            .col-ticket { width: 100%; height: 40%; }
+            .col-keypad { width: calc(50% - 4px); height: calc(60% - 8px); }
+            .col-products { width: calc(50% - 4px); height: calc(60% - 8px); flex: none; }
+            .lcd { --lcd-value-h: 56px; --lcd-pt: 6px; --lcd-pb: 6px; --lcd-gap: 2px; }
+            .lcd-value .num { font-size: min(48px, 17cqw); }
+            .multi-row { display: none; }   /* ×2 ×3 ×5 ×10: en vertical no hay sitio; se sigue pudiendo usar la tecla Cantidad */
+            .ticket-foot .tax-table { display: none; }
+            .ticket-head { min-height: 44px; padding-top: 2px; padding-bottom: 0; }
+            .charge-btn { min-height: 72px; }
+            .ticket-actions { padding: 4px 8px; }
+            .ticket-actions .btn { min-height: 52px; }
+            .total-amount { --total-fs: 34px; }
+            .full-only { display: none !important; }   /* en vertical solo caben las funciones del modo sencillo */
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -769,6 +811,9 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         <button id="held-btn" type="button" class="btn btn-outlined full-only" onclick="openHeldTicketsModal()">
             <span class="ms">inbox</span><span class="bi"><span class="zh" lang="zh-Hans">取单</span><span class="es">En espera</span></span><span id="held-count-badge" class="badge num hidden">0</span>
         </button>
+        <button id="recover-btn" type="button" class="btn btn-outlined" onclick="openRecoverModal()">
+            <span class="ms">restore</span><span class="bi"><span class="zh" lang="zh-Hans">找回小票</span><span class="es">Recuperar ticket</span></span>
+        </button>
         <button type="button" class="btn btn-outlined" onclick="openZReportModal()">
             <span class="ms">bar_chart</span><span class="bi"><span class="zh" lang="zh-Hans">日结</span><span class="es">Cierre de caja</span></span>
         </button>
@@ -784,7 +829,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         <section class="panel col-ticket" aria-label="Ticket">
             <div class="ticket-head">
                 <div class="grow stack-4" style="gap:2px">
-                    <div class="row gap-8 ticket-title"><span class="bi start inline"><span class="zh" lang="zh-Hans">小票</span><span class="es">Ticket</span></span> <span id="current-ticket-number" class="num">#T-0001</span></div>
+                    <div class="row gap-8 ticket-title"><span class="bi start inline"><span class="zh" lang="zh-Hans">小票</span><span class="es">Ticket</span></span> <span id="current-ticket-number" class="num ticket-num">#T-0001</span><span id="ticket-recovered-tag" class="tag recovered-tag hidden"></span></div>
                     <div id="ticket-item-count" class="ticket-count num"></div>
                 </div>
             </div>
@@ -895,7 +940,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
              ARTÍCULOS RÁPIDOS Y DEPARTAMENTOS
              ====================================================== -->
         <section class="panel col-products" aria-label="Productos">
-            <div class="section-head">
+            <div id="presets-head" class="section-head">
                 <span class="bi inline"><span class="zh" lang="zh-Hans">快捷商品</span><span class="es">Artículos rápidos</span></span>
             </div>
             <div id="quick-presets-grid" class="presets-grid"></div>
@@ -959,9 +1004,14 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                             <span id="change-label"></span>
                             <span id="change-amount" class="num">0,00 €</span>
                         </div>
-                        <button id="finish-cash-btn" type="button" class="btn btn-cobrar finish-btn" onclick="finishSale()">
-                            <span class="ms ms-fill" style="font-size:32px;width:32px;height:32px">check_circle</span><span class="bi"><span class="zh" lang="zh-Hans">完成</span><span class="es">Terminar</span></span>
-                        </button>
+                        <div class="finish-pair">
+                            <button type="button" class="btn btn-cobrar finish-btn finish-cash" onclick="finishSale(true)">
+                                <span class="ms ms-fill" style="font-size:32px;width:32px;height:32px">print</span><span class="bi"><span class="zh" lang="zh-Hans">收款并打印小票</span><span class="es">Cobrar e imprimir ticket</span></span>
+                            </button>
+                            <button type="button" class="btn btn-cobrar finish-btn finish-cash" onclick="finishSale(false)">
+                                <span class="ms ms-fill" style="font-size:32px;width:32px;height:32px">check_circle</span><span class="bi"><span class="zh" lang="zh-Hans">收款，不打印小票</span><span class="es">Cobrar sin ticket</span></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -972,9 +1022,14 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                         <span class="ms" style="font-size:72px;width:72px;height:72px;color:var(--md-primary)">credit_card</span>
                         <span class="bi wrap"><span class="zh" lang="zh-Hans">刷卡成功后，按"完成"。</span><span class="es">Cuando el pago esté aprobado, pulsa Terminar.</span></span>
                     </div>
-                    <button type="button" class="btn btn-cobrar finish-btn" onclick="finishSale()">
-                        <span class="ms ms-fill" style="font-size:32px;width:32px;height:32px">check_circle</span><span class="bi"><span class="zh" lang="zh-Hans">完成</span><span class="es">Terminar</span></span>
-                    </button>
+                    <div class="finish-pair">
+                        <button type="button" class="btn btn-cobrar finish-btn" onclick="finishSale(true)">
+                            <span class="ms ms-fill" style="font-size:32px;width:32px;height:32px">print</span><span class="bi"><span class="zh" lang="zh-Hans">收款并打印小票</span><span class="es">Cobrar e imprimir ticket</span></span>
+                        </button>
+                        <button type="button" class="btn btn-cobrar finish-btn" onclick="finishSale(false)">
+                            <span class="ms ms-fill" style="font-size:32px;width:32px;height:32px">check_circle</span><span class="bi"><span class="zh" lang="zh-Hans">收款，不打印小票</span><span class="es">Cobrar sin ticket</span></span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1040,6 +1095,22 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 <button type="button" class="btn icon-btn icon-btn--plain" onclick="closeHeldTicketsModal()" aria-label="Cerrar"><span class="ms">close</span></button>
             </div>
             <div id="held-tickets-list" class="dialog-body stack-8"></div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         RECUPERAR UN TICKET COBRADO
+         ========================================================== -->
+    <div id="recover-modal" class="scrim hidden">
+        <div class="dialog" style="max-width:760px" role="dialog" aria-modal="true" aria-labelledby="recover-title">
+            <div class="dialog-head">
+                <div id="recover-title" class="dialog-title"><span class="ms">restore</span><span class="bi start"><span class="zh" lang="zh-Hans">找回已收款的小票</span><span class="es">Recuperar un ticket cobrado</span></span></div>
+                <button type="button" class="btn icon-btn icon-btn--plain" onclick="closeRecoverModal()" aria-label="Cerrar"><span class="ms">close</span></button>
+            </div>
+            <div class="dialog-body stack-8">
+                <div class="setting-help"><span class="bi start wrap"><span class="zh" lang="zh-Hans">顾客改变主意时，找回小票就可以修改。</span><span class="es">Si el cliente cambia de opinión, recupera su ticket para cambiarlo.</span></span></div>
+                <div id="recover-list" class="stack-8"></div>
+            </div>
         </div>
     </div>
 
@@ -1208,12 +1279,19 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 </div>
 
                 <div id="settings-depts-anchor" class="stack-12">
-                    <span class="setting-title"><span class="bi start"><span class="zh" lang="zh-Hans">9 个商品分类</span><span class="es">9 departamentos</span></span></span>
+                    <div class="row between gap-12">
+                        <span class="row gap-12"><span class="setting-title"><span class="bi start"><span class="zh" lang="zh-Hans">商品分类</span><span class="es">Departamentos</span></span></span><span id="depts-count" class="count-pill num"></span></span>
+                        <button id="add-dept-btn" type="button" class="btn btn-tonal" onclick="addDraftDept()"><span class="ms">add</span><span class="bi"><span class="zh" lang="zh-Hans">添加分类</span><span class="es">Añadir departamento</span></span></button>
+                    </div>
+                    <div class="setting-help"><span class="bi start wrap"><span class="zh" lang="zh-Hans">按“保存”后才会生效。一屏最多显示 15 个按钮，超过后需要向下滑动。</span><span class="es">Los cambios se aplican al pulsar Guardar. En pantalla caben 15 botones en total; si pones más, la zona de productos se desplaza hacia abajo.</span></span></div>
                     <div id="settings-departments-list" class="grid-3"></div>
                 </div>
 
                 <div id="settings-presets-anchor" class="stack-12">
-                    <span class="setting-title"><span class="bi start"><span class="zh" lang="zh-Hans">6 个快捷商品</span><span class="es">6 artículos rápidos</span></span></span>
+                    <div class="row between gap-12">
+                        <span class="row gap-12"><span class="setting-title"><span class="bi start"><span class="zh" lang="zh-Hans">快捷商品</span><span class="es">Artículos rápidos</span></span></span><span id="presets-count" class="count-pill num"></span></span>
+                        <button id="add-preset-btn" type="button" class="btn btn-tonal" onclick="addDraftPreset()"><span class="ms">add</span><span class="bi"><span class="zh" lang="zh-Hans">添加快捷商品</span><span class="es">Añadir artículo rápido</span></span></button>
+                    </div>
                     <div id="settings-presets-list" class="grid-3"></div>
                 </div>
             </div>
@@ -1276,7 +1354,6 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
 
                 <div class="card-inset stack-4">
                     <span class="section-label"><span class="bi start"><span class="zh" lang="zh-Hans">3. 收款完成后</span><span class="es">3. Al terminar la venta</span></span></span>
-                    <label class="check-row"><span class="bi start"><span class="zh" lang="zh-Hans">自动打印小票</span><span class="es">Imprimir el ticket</span></span><input id="chk-auto-print" type="checkbox"></label>
                     <label class="check-row"><span class="bi start"><span class="zh" lang="zh-Hans">打开钱箱</span><span class="es">Abrir el cajón</span></span><input id="chk-cash-drawer" type="checkbox"></label>
                     <label class="check-row"><span class="bi start"><span class="zh" lang="zh-Hans">自动切纸</span><span class="es">Cortar el papel</span></span><input id="chk-auto-cut" type="checkbox"></label>
                 </div>
@@ -1373,18 +1450,18 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             keyClear: ['Precio a cero', '清零'],
             keyQty: ['Cantidad', '数量'],
             keyAdd: ['Añadir', '加入'],
-            lcdIdle: ['Marca el precio o elige un departamento', '输入价格，或选择分类'],
+            lcdIdle: ['Marca precio o departamento', '输入价格或选分类'],
             lcdPickDept: ['Ahora toca un departamento', '现在点商品分类'],
-            lcdTypePrice: ['Escribe el precio y pulsa Añadir', '输入价格，再按"加入"'],
+            lcdTypePrice: ['Escribe el precio y Añadir', '输入价格，按"加入"'],
             lcdPressAdd: ['Pulsa Añadir', '按"加入"'],
-            lcdQtyDept: ['Escribe la cantidad y toca un departamento', '输入数量，再点分类'],
-            lcdQtyAdd: ['Escribe la cantidad y pulsa Añadir', '输入数量，再按"加入"'],
+            lcdQtyDept: ['Cantidad y departamento', '输入数量，点分类'],
+            lcdQtyAdd: ['Cantidad y pulsa Añadir', '输入数量，按"加入"'],
             lcdAdded: ['Añadido', '已加入'],
             lcdNeedPrice: ['Primero escribe el precio', '请先输入价格'],
             lcdNeedDept: ['Elige un departamento', '请选择商品分类'],
-            lcdNeedPriceQty: ['Primero el precio, después Cantidad', '先输入价格，再按"数量"'],
-            lcdQtyInt: ['La cantidad debe ser un número entero', '数量必须是整数'],
-            lcdCentsNoComma: ['No hace falta la coma: 350 = 3,50 €', '不用小数点：350 = 3,50 €'],
+            lcdNeedPriceQty: ['Primero el precio', '请先输入价格'],
+            lcdQtyInt: ['Solo números enteros', '数量要是整数'],
+            lcdCentsNoComma: ['Sin coma: 350 = 3,50 €', '不用小数点'],
             qtyShort: ['Cant.', '数量'],
             note: ['Nota (opcional)', '备注'],
 
@@ -1506,9 +1583,9 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             shopName: ['Nombre del comercio', '店名'],
             shopNif: ['NIF / CIF', '税号'],
             shopAddress: ['Dirección y teléfono', '地址和电话'],
-            deptsSection: ['9 departamentos', '9 个商品分类'],
+            deptsSection: ['Departamentos', '商品分类'],
             dept: ['Departamento', '分类'],
-            presetsSection: ['6 artículos rápidos', '6 个快捷商品'],
+            presetsSection: ['Artículos rápidos', '快捷商品'],
             preset: ['Artículo', '商品'],
             nameEs: ['Nombre en español', '西班牙语名称'],
             nameZh: ['Nombre en chino', '中文名称'],
@@ -1565,7 +1642,33 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             removeDiscount: ['Quitar descuento', '去掉折扣'],
             restoreTitle: ['¿Restaurar los botones de fábrica?', '恢复默认按钮吗？'],
             restoreText: ['Se pierden los nombres, precios e IVA que hayas cambiado. Las ventas no se tocan.', '你改过的名称、价格和税率会丢失。销售记录不受影响。'],
-            restoreYes: ['Sí, restaurar', '是，恢复']
+            restoreYes: ['Sí, restaurar', '是，恢复'],
+
+            // Cobrar con o sin ticket
+            finishPrint: ['Cobrar e imprimir ticket', '收款并打印小票'],
+            finishNoPrint: ['Cobrar sin ticket', '收款，不打印小票'],
+
+            // Recuperar un ticket ya cobrado
+            recoverTicket: ['Recuperar ticket', '找回小票'],
+            recoverTitle: ['Recuperar un ticket cobrado', '找回已收款的小票'],
+            recoverHelp: ['Si el cliente cambia de opinión, recupera su ticket para cambiarlo.', '顾客改变主意时，找回小票就可以修改。'],
+            recoverAct: ['Recuperar', '找回'],
+            recoverNone: ['Aún no hay tickets cobrados.', '还没有已收款的小票。'],
+            confirmRecTitle: ['¿Recuperar este ticket?', '要找回这张小票吗？'],
+            confirmRecText: ['Se anula el cobro y el ticket vuelve a la pantalla para cambiarlo. Si ya cobraste, devuelve el dinero al cliente.', '这笔收款会作废，小票回到屏幕上，可以修改。如果已经收了钱，请退还给顾客。'],
+            confirmRecYes: ['Sí, recuperar', '是，找回'],
+            recoveredFrom: ['Recuperado', '已找回'],
+
+            // Ajustes: número de botones
+            deptsCount: ['Departamentos', '商品分类'],
+            presetsCount: ['Artículos rápidos', '快捷商品'],
+            addDept: ['Añadir departamento', '添加分类'],
+            addPreset: ['Añadir artículo rápido', '添加快捷商品'],
+            removeBtn: ['Quitar', '删除'],
+            maxReached: ['Máximo', '已到上限'],
+            countHelp: ['Los cambios se aplican al pulsar Guardar. En pantalla caben 15 botones en total; si pones más, la zona de productos se desplaza hacia abajo.', '按“保存”后才会生效。一屏最多显示 15 个按钮，超过后需要向下滑动。'],
+            newDeptName: ['Departamento', '分类'],
+            newPresetName: ['Artículo', '商品']
         };
 
         const DEPT_COLORS = {
@@ -1583,8 +1686,8 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         // Avisos (snackbar) con su traducción
         const MSG = {
             ticketEmpty: ['El ticket está vacío', '小票是空的'],
-            ticketEmptyCharge: ['El ticket está vacío. Añade algo antes de cobrar.', '小票是空的，请先加入商品。'],
-            needItemsDiscount: ['Añade artículos antes de hacer un descuento', '请先加入商品，再打折'],
+            ticketEmptyCharge: ['Ticket vacío: añade algo', '请先加入商品'],
+            needItemsDiscount: ['Primero añade artículos', '请先加入商品'],
             discountApplied: ['Descuento aplicado', '折扣已用上'],
             held: ['Ticket puesto en espera', '已挂单'],
             recovered: ['Ticket recuperado', '已取单'],
@@ -1611,7 +1714,11 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             simpleOff: ['Modo completo activado', '已改为完整模式'],
             centsOn: ['Precios sin coma: 350 = 3,50 €', '按分输入：350 = 3,50 €'],
             centsOff: ['Precios con coma: 3,50', '用小数点输入：3,50'],
-            badAmount: ['Escribe un importe válido', '请输入正确的金额']
+            badAmount: ['Escribe un importe válido', '请输入正确的金额'],
+            recoveredSale: ['Ticket recuperado. Cámbialo y vuelve a cobrar.', '小票已找回，修改后重新收款。'],
+            recoveredParked: ['Ticket recuperado. El que tenías abierto está en «En espera».', '小票已找回，原来的小票在“取单”里。'],
+            lastOneDept: ['Tiene que quedar al menos un departamento', '至少要保留一个商品分类'],
+            drawerOpened: ['Cajón abierto', '钱箱已打开']
         };
 
         // =========================================================
@@ -1626,7 +1733,6 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         const DEFAULT_PRINTER_CONFIG = {
             mode: 'browser',       // 'browser' | 'bluetooth' | 'rawbt'
             paperWidth: '80mm',    // '80mm' | '58mm'
-            autoPrint: false,      // Imprimir al terminar la venta
             openDrawer: true,      // Pulso ESC/POS al cajón (RJ11)
             autoCut: true,         // Corte de papel GS V
             footerText: "¡Gracias por su visita! Conserve su ticket."
@@ -1681,6 +1787,12 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
 
         const LANG_MODES = ['es', 'es-zh', 'zh-es', 'zh'];
 
+        // Botones: hasta 15 (5 filas de 3) caben en una pantalla; con más, la zona de productos se desplaza
+        const MAX_DEPTS = 18;
+        const MAX_PRESETS = 12;
+        const MIN_DEPTS = 1;
+        const FIT_BUTTONS = 15;
+
         // =========================================================
         // ESTADO
         // =========================================================
@@ -1697,6 +1809,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
 
         let currentCart = [];
         let currentDiscount = null; // { type: 'percent' | 'fixed', value }
+        let reopened = null;        // { id, seq } si el ticket abierto es una venta recuperada (conserva su número)
 
         // Calculadora
         let keypadBuffer = "";
@@ -1707,7 +1820,9 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         let lcdOverride = null;      // { es, zh, kind }
         let lcdTimer = null;
 
-        // Ajustes
+        // Ajustes (copias de trabajo mientras el diálogo está abierto)
+        let draftDepts = null;
+        let draftPresets = null;
         let centsMode = false;
         let soundEnabled = true;
         let langMode = 'es';
@@ -1848,6 +1963,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 if (open && Array.isArray(open.cart)) {
                     currentCart = open.cart;
                     currentDiscount = open.discount || null;
+                    reopened = open.reopened && open.reopened.id ? open.reopened : null;
                 }
             } catch (err) {
                 shopConfig = { ...DEFAULT_SHOP_CONFIG };
@@ -2196,7 +2312,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
 
             // Mensaje
             const m = lcdOverride ? [lcdOverride.es, lcdOverride.zh] : lcdHint();
-            msgEl.innerHTML = Lx(m[0], m[1], 'end wrap');
+            msgEl.innerHTML = Lx(m[0], m[1], 'end');
             msgEl.classList.toggle('is-error', !!(lcdOverride && lcdOverride.kind === 'error'));
 
             // Tecla Añadir: resaltada solo cuando tiene sentido pulsarla
@@ -2232,10 +2348,10 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                     const parts = keypadBuffer.split('.');
                     if (parts[1] && parts[1].length >= 2) return;
                     if (digit === '00' && parts[1].length === 1) digit = '0';
-                }
-                if (keypadBuffer === "0" && digit !== ".") keypadBuffer = digit === '00' ? '0' : digit;
+                    keypadBuffer += digit;
+                } else if (keypadBuffer === "0") keypadBuffer = digit === '00' ? '0' : digit;
                 else if (keypadBuffer === "" && digit === "00") keypadBuffer = "0";
-                else if (keypadBuffer.length < 8) keypadBuffer += digit;
+                else if (keypadBuffer.length + digit.length <= 5) keypadBuffer += digit;   // hasta 99999
             }
             updateKeypadDisplay();
         }
@@ -2338,7 +2454,13 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         // ARTÍCULOS RÁPIDOS Y DEPARTAMENTOS
         // =========================================================
         function renderQuickPresets() {
-            document.getElementById('quick-presets-grid').innerHTML = quickPresets.map(p => `
+            const grid = document.getElementById('quick-presets-grid');
+            const rows = Math.ceil(quickPresets.length / 3);
+            grid.style.setProperty('--rows', Math.max(rows, 1));
+            // Sin artículos rápidos no se enseña ni el título
+            grid.classList.toggle('hidden', quickPresets.length === 0);
+            document.getElementById('presets-head').classList.toggle('hidden', quickPresets.length === 0);
+            grid.innerHTML = quickPresets.map(p => `
                 <button type="button" onclick="tapQuickPreset('${p.id}')" class="btn tile tile--preset" aria-label="${escapeHtml(p.name)}, ${formatEuro(p.price)}">
                     <span class="preset-name pname-wrap">${pname(p.name, presetZh(p))}</span>
                     <span class="preset-price num">${formatEuro(Number(p.price))}</span>
@@ -2346,6 +2468,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         }
 
         function renderDepartments() {
+            document.getElementById('departments-grid').style.setProperty('--rows', Math.max(Math.ceil(departments.length / 3), 1));
             document.getElementById('departments-grid').innerHTML = departments.map(d => {
                 const color = DEPT_COLORS[d.color] ? d.color : 'slate';
                 const sel = d.id === selectedDeptId;
@@ -2490,7 +2613,11 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         }
 
         function renderReceipt(highlightUid = null) {
-            document.getElementById('current-ticket-number').textContent = formatTicketNumber(ticketSequence);
+            if (currentCart.length === 0) reopened = null;
+            document.getElementById('current-ticket-number').textContent = reopened ? reopened.id : formatTicketNumber(ticketSequence);
+            const recTag = document.getElementById('ticket-recovered-tag');
+            recTag.innerHTML = P('recoveredFrom');
+            recTag.classList.toggle('hidden', !reopened);
             const units = currentCart.reduce((acc, i) => acc + i.qty, 0);
             document.getElementById('ticket-item-count').innerHTML = currentCart.length
                 ? Lx(`${currentCart.length} ${T.lines[0]} · ${units} ${T.units[0]}`, `${currentCart.length} ${T.lines[1]} · ${units} ${T.units[1]}`, 'start inline')
@@ -2535,11 +2662,14 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 return `<div class="tax-grid tax-row ${b.total > 0 ? 'is-active' : ''}"><span>${r} %</span><span>${formatEuro(b.base)}</span><span>${formatEuro(b.quota)}</span><span>${formatEuro(b.total)}</span></div>`;
             }).join('');
 
-            document.getElementById('receipt-grand-total').textContent = formatEuro(totals.grandTotal);
-            document.getElementById('charge-btn-amount').textContent = formatEuro(totals.grandTotal);
+            for (const id of ['receipt-grand-total', 'charge-btn-amount']) {
+                const el = document.getElementById(id);
+                el.textContent = formatEuro(totals.grandTotal);
+                el.dataset.len = String(Math.min(Math.max(el.textContent.length, 9), 12));
+            }
             document.getElementById('charge-main-btn').setAttribute('aria-disabled', currentCart.length === 0 ? 'true' : 'false');
             document.getElementById('cancel-sale-btn').setAttribute('aria-disabled', currentCart.length === 0 ? 'true' : 'false');
-            safeSetItem('qtpos_open_ticket', JSON.stringify({ cart: currentCart, discount: currentDiscount }));
+            safeSetItem('qtpos_open_ticket', JSON.stringify({ cart: currentCart, discount: currentDiscount, reopened }));
         }
 
         function applyTaxBreakdownState() {
@@ -2557,7 +2687,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         function askCancelSale() {
             if (currentCart.length === 0) { lcdError('ticketEmpty'); return; }
             confirmDialog({ title: 'confirmCancelTitle', text: 'confirmCancelText', yes: 'confirmCancelYes', icon: 'delete_sweep' }, () => {
-                const snapshot = { cart: currentCart, discount: currentDiscount };
+                const snapshot = { cart: currentCart, discount: currentDiscount, reopened };
                 currentCart = [];
                 currentDiscount = null;
                 playBeep(380, 0.08, 'triangle');
@@ -2565,6 +2695,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 showSnack('saleCancelled', 'info', () => {
                     currentCart = snapshot.cart;
                     currentDiscount = snapshot.discount;
+                    reopened = snapshot.reopened;
                     renderReceipt();
                 });
             });
@@ -2670,11 +2801,13 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
                 cart: JSON.parse(JSON.stringify(currentCart)),
                 discount: currentDiscount ? { ...currentDiscount } : null,
+                reopened: reopened ? { ...reopened } : null,
                 total: calculateTicketTotals().grandTotal
             };
             heldTickets.push(held);
             currentCart = [];
             currentDiscount = null;
+            reopened = null;
             saveStateToStorage();
             updateHeldBadge();
             renderReceipt();
@@ -2685,6 +2818,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                     heldTickets.splice(i, 1);
                     currentCart = held.cart;
                     currentDiscount = held.discount;
+                    reopened = held.reopened || null;
                     saveStateToStorage();
                     updateHeldBadge();
                     renderReceipt();
@@ -2724,6 +2858,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             if (currentCart.length > 0) holdCurrentTicket(true);
             currentCart = restored.cart;
             currentDiscount = restored.discount;
+            reopened = restored.reopened || null;
             saveStateToStorage();
             updateHeldBadge();
             renderReceipt();
@@ -2821,7 +2956,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             const box = document.getElementById('change-box');
             const label = document.getElementById('change-label');
             const amount = document.getElementById('change-amount');
-            const finish = document.getElementById('finish-cash-btn');
+            const finish = { setAttribute: (k, v) => document.querySelectorAll('.finish-cash').forEach(b => b.setAttribute(k, v)) };
             const diff = round2(pay.received - due);
 
             if (mixed) {
@@ -2852,7 +2987,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             }
         }
 
-        function finishSale() {
+        function finishSale(withTicket) {
             const totals = calculateTicketTotals();
             const due = round2(totals.grandTotal);
             let cashAmount = 0, cardAmount = 0, changeGiven = 0, tendered = 0;
@@ -2879,9 +3014,12 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 changeGiven = round2(Math.max(0, pay.received - due));
             }
 
+            // Un ticket recuperado conserva el número que tenía; uno nuevo toma el siguiente
+            const reuse = reopened;
+            const saleSeq = reuse ? reuse.seq : ticketSequence;
             const sale = {
-                id: formatTicketNumber(ticketSequence),
-                seq: ticketSequence,
+                id: reuse ? reuse.id : formatTicketNumber(saleSeq),
+                seq: saleSeq,
                 timestamp: new Date().toISOString(),
                 displayTime: new Date().toLocaleString('es-ES'),
                 items: JSON.parse(JSON.stringify(currentCart)),
@@ -2893,8 +3031,12 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 cardAmount,
                 changeGiven
             };
-            completedSales.unshift(sale);
-            ticketSequence++;
+            // Lista ordenada por número, de más nuevo a más antiguo
+            let at = completedSales.findIndex(x => (x.seq || 0) < sale.seq);
+            if (at === -1) at = completedSales.length;
+            completedSales.splice(at, 0, sale);
+            if (!reuse) ticketSequence++;
+            reopened = null;
             currentCart = [];
             currentDiscount = null;
             saveStateToStorage();
@@ -2906,12 +3048,63 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             showSnack(changeGiven > 0
                 ? [`Cobrado ${formatEuro(due)} · ${T.change[0]} ${formatEuro(changeGiven)}`, `收款 ${formatEuro(due)} · ${T.change[1]} ${formatEuro(changeGiven)}`]
                 : [`Cobrado ${formatEuro(due)}`, `收款完成 ${formatEuro(due)}`], 'success');
-            if (printerConfig.autoPrint) printReceiptThermal(sale);
+            if (withTicket) printReceiptThermal(sale);
+            else if (sale.cashAmount > 0) openCashDrawer();
         }
 
         function updateTopSalesPill() {
             const total = completedSales.reduce((acc, s) => acc + s.totals.grandTotal, 0);
             document.getElementById('today-sales-pill').textContent = formatEuro(total);
+        }
+
+        // =========================================================
+        // RECUPERAR UN TICKET YA COBRADO (el cliente cambia de opinión)
+        // =========================================================
+        function renderRecoverList() {
+            const listEl = document.getElementById('recover-list');
+            if (completedSales.length === 0) {
+                listEl.innerHTML = `<div class="empty" style="height:auto;padding:32px"><span class="ms empty-icon">receipt_long</span>${L('recoverNone')}</div>`;
+                return;
+            }
+            const methodIcon = { cash: 'payments', card: 'credit_card', mixed: 'call_split' };
+            const methodKey = { cash: 'payMethodCash', card: 'payMethodCard', mixed: 'payMethodMixed' };
+            listEl.innerHTML = completedSales.map(s => `
+                <div class="list-row recover-row">
+                    <div class="grow stack-4" style="min-width:0">
+                        <div class="row gap-8" style="flex-wrap:wrap">
+                            <span class="num" style="font-weight:700">${s.id}</span>
+                            <span class="tag"><span class="ms" style="font-size:18px;width:18px;height:18px">${methodIcon[s.paymentMethod] || 'payments'}</span>${P(methodKey[s.paymentMethod] || 'payMethodCash')}</span>
+                            <span class="muted num" style="font-size:16px">${(s.displayTime || '').split(' ').pop()}</span>
+                        </div>
+                        <div class="muted truncate" style="font-size:16px">${s.items.map(i => `${i.qty}× ${isZhFirst() && i.nameZh ? `<span class="zh-text" lang="zh-Hans">${escapeHtml(i.nameZh)}</span>` : escapeHtml(i.name)}`).join(', ')}</div>
+                    </div>
+                    <span class="num" style="font-weight:700;font-size:22px">${formatEuro(s.totals.grandTotal)}</span>
+                    <button type="button" class="btn btn-filled" onclick="askRecoverSale('${s.id}')"><span class="ms">restore</span>${L('recoverAct')}</button>
+                </div>`).join('');
+        }
+        function openRecoverModal() { renderRecoverList(); openModal('recover-modal'); }
+        function closeRecoverModal() { closeModal('recover-modal'); }
+        function askRecoverSale(id) {
+            confirmDialog({ title: 'confirmRecTitle', text: 'confirmRecText', yes: 'confirmRecYes', icon: 'restore' }, () => recoverSale(id));
+        }
+        function recoverSale(id) {
+            const idx = completedSales.findIndex(s => s.id === id);
+            if (idx === -1) return;
+            const sale = completedSales[idx];
+            // Si había un ticket a medias, pasa a «En espera» para no perderlo
+            const parked = currentCart.length > 0;
+            if (parked) holdCurrentTicket(true);
+            completedSales.splice(idx, 1);
+            currentCart = sale.items.map(i => ({ ...i }));
+            currentDiscount = sale.discount ? { ...sale.discount } : null;
+            reopened = { id: sale.id, seq: sale.seq };
+            saveStateToStorage();
+            updateTopSalesPill();
+            updateHeldBadge();
+            renderReceipt();
+            closeRecoverModal();
+            playBeep(1180, 0.06);
+            showSnack(parked ? 'recoveredParked' : 'recoveredSale', 'success');
         }
 
         // =========================================================
@@ -2927,7 +3120,6 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         function openPrinterModal() {
             selectPrinterMode(printerConfig.mode || 'browser');
             selectPaperWidth(printerConfig.paperWidth || '80mm');
-            document.getElementById('chk-auto-print').checked = !!printerConfig.autoPrint;
             document.getElementById('chk-cash-drawer').checked = printerConfig.openDrawer !== false;
             document.getElementById('chk-auto-cut').checked = printerConfig.autoCut !== false;
             document.getElementById('printer-footer-msg').value = printerConfig.footerText || DEFAULT_PRINTER_CONFIG.footerText;
@@ -2949,7 +3141,6 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             document.getElementById('paper-width-80').classList.toggle('is-selected', width !== '58mm');
         }
         function readPrinterChecks() {
-            printerConfig.autoPrint = document.getElementById('chk-auto-print').checked;
             printerConfig.openDrawer = document.getElementById('chk-cash-drawer').checked;
             printerConfig.autoCut = document.getElementById('chk-auto-cut').checked;
             printerConfig.footerText = document.getElementById('printer-footer-msg').value.trim() || DEFAULT_PRINTER_CONFIG.footerText;
@@ -3089,6 +3280,21 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             });
         }
 
+        // Sin ticket también hay que abrir el cajón cuando se cobra en efectivo
+        async function openCashDrawer() {
+            if (printerConfig.openDrawer === false) return;
+            const pulse = '\x1B\x40\x1B\x70\x00\x19\xFA';
+            if (printerConfig.mode === 'bluetooth' && btCharacteristic) {
+                try {
+                    const bytes = new TextEncoder().encode(pulse);
+                    if (btCharacteristic.properties.writeWithoutResponse) await btCharacteristic.writeValueWithoutResponse(bytes);
+                    else await btCharacteristic.writeValue(bytes);
+                } catch (e) { /* si falla, el cajón se abre a mano */ }
+            } else if (printerConfig.mode === 'rawbt') {
+                window.location.href = `rawbt:base64,${btoa(pulse)}`;
+            }
+        }
+
         async function printReceiptThermal(sale) {
             if (printerConfig.mode === 'bluetooth') {
                 const sent = await sendEscPosViaWebBluetooth(buildEscPosPayload(sale));
@@ -3220,9 +3426,10 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         function askCloseDay() {
             if (completedSales.length === 0) { showSnack('noSalesClose', 'info'); return; }
             confirmDialog({ title: 'confirmCloseTitle', text: 'confirmCloseText', yes: 'confirmCloseYes', icon: 'delete_sweep' }, () => {
-                const snapshot = { sales: completedSales, seq: ticketSequence };
+                const snapshot = { sales: completedSales, seq: ticketSequence, reopened };
                 completedSales = [];
                 ticketSequence = 1;
+                reopened = null;
                 saveStateToStorage();
                 updateTopSalesPill();
                 renderZReportContent();
@@ -3230,6 +3437,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 showSnack('dayClosed', 'success', () => {
                     completedSales = snapshot.sales;
                     ticketSequence = snapshot.seq;
+                    if (currentCart.length) reopened = snapshot.reopened;
                     saveStateToStorage();
                     updateTopSalesPill();
                     renderZReportContent();
@@ -3301,34 +3509,9 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
             document.getElementById('set-shop-nif').value = shopConfig.nif;
             document.getElementById('set-shop-address').value = shopConfig.address;
 
-            document.getElementById('settings-departments-list').innerHTML = departments.map((d, idx) => {
-                const color = DEPT_COLORS[d.color] ? d.color : 'slate';
-                return `
-                <div class="card-inset stack-8">
-                    <div class="row between"><span class="section-label">${Lx(`${T.dept[0]} ${idx + 1}`, `${T.dept[1]} ${idx + 1}`, 'start inline')}</span><span class="dot" style="background:var(--dept-${color})"></span></div>
-                    <label class="stack-4"><span class="section-label">${L('nameEs', 'start')}</span><input id="edit-dept-name-${idx}" type="text" value="${escapeHtml(d.name)}" class="field"></label>
-                    <label class="stack-4"><span class="section-label">${L('nameZh', 'start')}</span><input id="edit-dept-zh-${idx}" type="text" value="${escapeHtml(deptZh(d))}" class="field zh-text" lang="zh-Hans"></label>
-                    <div class="grid-2" style="gap:8px">
-                        <label class="stack-4"><span class="section-label">${L('vat', 'start')}</span><select id="edit-dept-tax-${idx}" class="field num">${vatOptions(d.tax, true)}</select></label>
-                        <label class="stack-4"><span class="section-label">${L('color', 'start')}</span>
-                            <select id="edit-dept-color-${idx}" class="field" onchange="this.closest('.card-inset').querySelector('.dot').style.background='var(--dept-'+this.value+')'">
-                                ${Object.keys(DEPT_COLORS).map(c => `<option value="${c}" ${color === c ? 'selected' : ''}>${langMode === 'zh' ? DEPT_COLORS[c][1] : (isZhFirst() ? DEPT_COLORS[c][1] + ' · ' + DEPT_COLORS[c][0] : DEPT_COLORS[c][0])}</option>`).join('')}
-                            </select>
-                        </label>
-                    </div>
-                </div>`;
-            }).join('');
-
-            document.getElementById('settings-presets-list').innerHTML = quickPresets.map((p, idx) => `
-                <div class="card-inset stack-8">
-                    <span class="section-label">${Lx(`${T.preset[0]} ${idx + 1}`, `${T.preset[1]} ${idx + 1}`, 'start inline')}</span>
-                    <label class="stack-4"><span class="section-label">${L('nameEs', 'start')}</span><input id="edit-preset-name-${idx}" type="text" value="${escapeHtml(p.name)}" class="field"></label>
-                    <label class="stack-4"><span class="section-label">${L('nameZh', 'start')}</span><input id="edit-preset-zh-${idx}" type="text" value="${escapeHtml(presetZh(p))}" class="field zh-text" lang="zh-Hans"></label>
-                    <div class="grid-2" style="gap:8px">
-                        <label class="stack-4"><span class="section-label">${L('price', 'start')}</span><input id="edit-preset-price-${idx}" type="text" inputmode="decimal" value="${String(p.price).replace('.', ',')}" class="field num"></label>
-                        <label class="stack-4"><span class="section-label">${L('vat', 'start')}</span><select id="edit-preset-tax-${idx}" class="field num">${vatOptions(p.tax, false)}</select></label>
-                    </div>
-                </div>`).join('');
+            draftDepts = JSON.parse(JSON.stringify(departments));
+            draftPresets = JSON.parse(JSON.stringify(quickPresets));
+            renderSettingsLists();
 
             document.getElementById('chk-simple').checked = simpleMode;
             document.getElementById('chk-sound').checked = soundEnabled;
@@ -3345,21 +3528,24 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 if (anchor) body.scrollTop = anchor.offsetTop - body.offsetTop - 8;
             }
         }
-        function closeSettingsModal() { closeModal('settings-modal'); }
-        function saveSettingsFromModal() {
-            shopConfig.name = document.getElementById('set-shop-name').value.trim() || DEFAULT_SHOP_CONFIG.name;
-            shopConfig.nif = document.getElementById('set-shop-nif').value.trim() || DEFAULT_SHOP_CONFIG.nif;
-            shopConfig.address = document.getElementById('set-shop-address').value.trim() || DEFAULT_SHOP_CONFIG.address;
-            departments.forEach((d, idx) => {
-                const nameVal = document.getElementById(`edit-dept-name-${idx}`).value.trim();
+        function closeSettingsModal() { draftDepts = draftPresets = null; closeModal('settings-modal'); }
+        // Pasa lo escrito en los campos a las copias de trabajo (antes de añadir, quitar o guardar)
+        function syncDraftsFromFields() {
+            if (!draftDepts || !draftPresets) return;
+            draftDepts.forEach((d, idx) => {
+                const name = document.getElementById(`edit-dept-name-${idx}`);
+                if (!name) return;
+                const nameVal = name.value.trim();
                 const taxVal = parseInt(document.getElementById(`edit-dept-tax-${idx}`).value, 10);
                 if (nameVal) d.name = nameVal;
                 d.zh = document.getElementById(`edit-dept-zh-${idx}`).value.trim();
                 d.tax = isNaN(taxVal) ? 21 : taxVal;
                 d.color = document.getElementById(`edit-dept-color-${idx}`).value;
             });
-            quickPresets.forEach((p, idx) => {
-                const nameVal = document.getElementById(`edit-preset-name-${idx}`).value.trim();
+            draftPresets.forEach((p, idx) => {
+                const name = document.getElementById(`edit-preset-name-${idx}`);
+                if (!name) return;
+                const nameVal = name.value.trim();
                 const priceVal = parseAmount(document.getElementById(`edit-preset-price-${idx}`).value);
                 const taxVal = parseInt(document.getElementById(`edit-preset-tax-${idx}`).value, 10);
                 if (nameVal) p.name = nameVal;
@@ -3367,6 +3553,93 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
                 p.price = isNaN(priceVal) || priceVal < 0 ? 1.00 : priceVal;
                 p.tax = isNaN(taxVal) ? 21 : taxVal;
             });
+        }
+        function renderSettingsLists() {
+            const body = document.getElementById('settings-body');
+            const keep = body ? body.scrollTop : 0;
+
+            document.getElementById('settings-departments-list').innerHTML = draftDepts.map((d, idx) => {
+                const color = DEPT_COLORS[d.color] ? d.color : 'slate';
+                return `
+                <div class="card-inset stack-8">
+                    <div class="row between"><span class="section-label">${Lx(`${T.dept[0]} ${idx + 1}`, `${T.dept[1]} ${idx + 1}`, 'start inline')}</span>
+                        <span class="row gap-8"><span class="dot" style="background:var(--dept-${color})"></span>
+                        <button type="button" class="btn btn-text danger remove-btn" onclick="removeDraftDept(${idx})" ${draftDepts.length <= MIN_DEPTS ? 'disabled' : ''}><span class="ms">delete</span>${L('removeBtn')}</button></span></div>
+                    <label class="stack-4"><span class="section-label">${L('nameEs', 'start')}</span><input id="edit-dept-name-${idx}" type="text" value="${escapeHtml(d.name)}" class="field"></label>
+                    <label class="stack-4"><span class="section-label">${L('nameZh', 'start')}</span><input id="edit-dept-zh-${idx}" type="text" value="${escapeHtml(deptZh(d))}" class="field zh-text" lang="zh-Hans"></label>
+                    <div class="grid-2" style="gap:8px">
+                        <label class="stack-4"><span class="section-label">${L('vat', 'start')}</span><select id="edit-dept-tax-${idx}" class="field num">${vatOptions(d.tax, true)}</select></label>
+                        <label class="stack-4"><span class="section-label">${L('color', 'start')}</span>
+                            <select id="edit-dept-color-${idx}" class="field" onchange="this.closest('.card-inset').querySelector('.dot').style.background='var(--dept-'+this.value+')'">
+                                ${Object.keys(DEPT_COLORS).map(c => `<option value="${c}" ${color === c ? 'selected' : ''}>${langMode === 'zh' ? DEPT_COLORS[c][1] : (isZhFirst() ? DEPT_COLORS[c][1] + ' · ' + DEPT_COLORS[c][0] : DEPT_COLORS[c][0])}</option>`).join('')}
+                            </select>
+                        </label>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('settings-presets-list').innerHTML = draftPresets.map((p, idx) => `
+                <div class="card-inset stack-8">
+                    <div class="row between"><span class="section-label">${Lx(`${T.preset[0]} ${idx + 1}`, `${T.preset[1]} ${idx + 1}`, 'start inline')}</span>
+                        <button type="button" class="btn btn-text danger remove-btn" onclick="removeDraftPreset(${idx})"><span class="ms">delete</span>${L('removeBtn')}</button></div>
+                    <label class="stack-4"><span class="section-label">${L('nameEs', 'start')}</span><input id="edit-preset-name-${idx}" type="text" value="${escapeHtml(p.name)}" class="field"></label>
+                    <label class="stack-4"><span class="section-label">${L('nameZh', 'start')}</span><input id="edit-preset-zh-${idx}" type="text" value="${escapeHtml(presetZh(p))}" class="field zh-text" lang="zh-Hans"></label>
+                    <div class="grid-2" style="gap:8px">
+                        <label class="stack-4"><span class="section-label">${L('price', 'start')}</span><input id="edit-preset-price-${idx}" type="text" inputmode="decimal" value="${String(p.price).replace('.', ',')}" class="field num"></label>
+                        <label class="stack-4"><span class="section-label">${L('vat', 'start')}</span><select id="edit-preset-tax-${idx}" class="field num">${vatOptions(p.tax, false)}</select></label>
+                    </div>
+                </div>`).join('');
+
+            document.getElementById('depts-count').textContent = `${draftDepts.length} / ${MAX_DEPTS}`;
+            document.getElementById('presets-count').textContent = `${draftPresets.length} / ${MAX_PRESETS}`;
+            document.getElementById('add-dept-btn').disabled = draftDepts.length >= MAX_DEPTS;
+            document.getElementById('add-preset-btn').disabled = draftPresets.length >= MAX_PRESETS;
+            if (body) body.scrollTop = keep;
+        }
+        function newId(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+        function addDraftDept() {
+            syncDraftsFromFields();
+            if (draftDepts.length >= MAX_DEPTS) return;
+            playBeep(1000, 0.04);
+            const used = draftDepts.map(d => d.color);
+            const colors = Object.keys(DEPT_COLORS);
+            const color = colors.find(c => !used.includes(c)) || colors[draftDepts.length % colors.length];
+            draftDepts.push({ id: newId('d'), name: `${T.newDeptName[0]} ${draftDepts.length + 1}`, zh: `${T.newDeptName[1]}${draftDepts.length + 1}`, tax: 21, color, icon: 'sell' });
+            renderSettingsLists();
+            const el = document.getElementById(`edit-dept-name-${draftDepts.length - 1}`);
+            if (el) el.closest('.card-inset').scrollIntoView({ block: 'nearest' });
+        }
+        function addDraftPreset() {
+            syncDraftsFromFields();
+            if (draftPresets.length >= MAX_PRESETS) return;
+            playBeep(1000, 0.04);
+            draftPresets.push({ id: newId('p'), name: `${T.newPresetName[0]} ${draftPresets.length + 1}`, zh: `${T.newPresetName[1]}${draftPresets.length + 1}`, price: 1.00, tax: 21 });
+            renderSettingsLists();
+            const el = document.getElementById(`edit-preset-name-${draftPresets.length - 1}`);
+            if (el) el.closest('.card-inset').scrollIntoView({ block: 'nearest' });
+        }
+        function removeDraftDept(idx) {
+            if (draftDepts.length <= MIN_DEPTS) { showSnack('lastOneDept', 'amber'); return; }
+            syncDraftsFromFields();
+            playBeep(600, 0.04);
+            draftDepts.splice(idx, 1);
+            renderSettingsLists();
+        }
+        function removeDraftPreset(idx) {
+            syncDraftsFromFields();
+            playBeep(600, 0.04);
+            draftPresets.splice(idx, 1);
+            renderSettingsLists();
+        }
+        function saveSettingsFromModal() {
+            shopConfig.name = document.getElementById('set-shop-name').value.trim() || DEFAULT_SHOP_CONFIG.name;
+            shopConfig.nif = document.getElementById('set-shop-nif').value.trim() || DEFAULT_SHOP_CONFIG.nif;
+            shopConfig.address = document.getElementById('set-shop-address').value.trim() || DEFAULT_SHOP_CONFIG.address;
+            syncDraftsFromFields();
+            departments = draftDepts;
+            quickPresets = draftPresets;
+            draftDepts = draftPresets = null;
+            if (!departments.some(d => d.id === selectedDeptId)) selectedDeptId = null;
             saveStateToStorage();
             renderShopHeader();
             renderDepartments();
@@ -3394,7 +3667,7 @@ html[data-mode="dark"]{--qt-cobrar:#88D990;--qt-on-cobrar:#003913;--qt-cobrar-co
         // =========================================================
         // DIÁLOGOS
         // =========================================================
-        const MODAL_IDS = ['confirm-modal', 'printer-modal', 'appearance-modal', 'line-modal', 'checkout-modal', 'discount-modal', 'held-tickets-modal', 'zreport-modal', 'settings-modal'];
+        const MODAL_IDS = ['confirm-modal', 'recover-modal', 'printer-modal', 'appearance-modal', 'line-modal', 'checkout-modal', 'discount-modal', 'held-tickets-modal', 'zreport-modal', 'settings-modal'];
         function openModal(id) {
             const m = document.getElementById(id);
             m.classList.remove('hidden');

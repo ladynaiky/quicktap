@@ -26,6 +26,14 @@ Se cambian en **Ajustes**. Los botones de idioma se leen siempre en español y e
 
 El **modo sencillo** (长辈模式) viene activado de fábrica: letra y botones más grandes, más contraste y solo las funciones de cada día. Esconde los tickets en espera, el descuento, el desglose de IVA y las cantidades rápidas ×2, ×3… Se quita en **Ajustes › Modo sencillo**.
 
+## Cobrar, recuperar y personalizar
+
+- **Con o sin ticket.** Al terminar un cobro hay dos botones: «Cobrar e imprimir ticket» y «Cobrar sin ticket». Si cobras en efectivo sin ticket y tienes una impresora Bluetooth o RawBT con cajón, el cajón se abre igualmente.
+- **Recuperar ticket.** El botón **Recuperar ticket** de la barra superior lista los tickets cobrados hoy. Al recuperar uno, se anula el cobro y el ticket vuelve a la pantalla para cambiarlo. Al cobrarlo otra vez conserva su número. Si había otro ticket a medias, pasa a «En espera».
+- **Número de botones.** En **Ajustes** puedes añadir y quitar departamentos (de 1 a 18) y artículos rápidos (de 0 a 12). Los cambios se aplican al pulsar **Guardar**. En pantalla caben 15 botones en total; si pones más, la zona de productos se desplaza hacia abajo.
+- **Pantalla de la calculadora.** Mide siempre lo mismo, escribas lo que escribas. Los precios admiten hasta 99999,99 €.
+- **Mejor en horizontal.** En vertical no caben las funciones del modo completo (descuento, en espera, desglose de IVA, ×2 ×3…), así que se esconden. Gira la tablet para usarlas.
+
 ## Publicar en GitHub Pages
 
 1. Entra en GitHub y crea un repositorio nuevo, por ejemplo `quicktap`. Hazlo **público**: con una cuenta gratuita, GitHub Pages solo funciona en repositorios públicos.

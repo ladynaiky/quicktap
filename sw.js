@@ -5,7 +5,7 @@
  * Al publicar una versión nueva de index.html, cambia CACHE_VERSION
  * (por ejemplo, de 'quicktap-v2' a 'quicktap-v3') para que todos los dispositivos la reciban.
  */
-const CACHE_VERSION = 'quicktap-v2';
+const CACHE_VERSION = 'quicktap-v3';
 const FONT_CACHE = 'quicktap-fonts-v1';
 
 const APP_SHELL = [
